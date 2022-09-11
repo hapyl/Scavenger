@@ -1,0 +1,8 @@
+name: Scavenger
+version: '${project.version}'
+main: me.hapyl.scavenger.Main
+api-version: 1.19
+prefix: SCAV
+depend: [ EternaAPI ]
+authors: [ hapyl ]
+description: A scavenger game to play with friends.
