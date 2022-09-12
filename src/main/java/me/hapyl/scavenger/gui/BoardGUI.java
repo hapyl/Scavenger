@@ -1,7 +1,7 @@
 package me.hapyl.scavenger.gui;
 
-import me.hapyl.scavenger.Board;
 import me.hapyl.scavenger.Main;
+import me.hapyl.scavenger.game.Board;
 import me.hapyl.scavenger.task.Task;
 import me.hapyl.spigotutils.module.inventory.ItemBuilder;
 import me.hapyl.spigotutils.module.inventory.gui.PlayerGUI;

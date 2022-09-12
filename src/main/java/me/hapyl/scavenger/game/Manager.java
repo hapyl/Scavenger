@@ -1,4 +1,7 @@
-package me.hapyl.scavenger;
+package me.hapyl.scavenger.game;
+
+import me.hapyl.scavenger.Inject;
+import me.hapyl.scavenger.Main;
 
 import javax.annotation.Nullable;
 
@@ -17,5 +20,10 @@ public class Manager extends Inject {
 
     public void createBoard() {
         board = new Board(30);
+    }
+
+    public void removeBoard() {
+        board.stop();
+        board = null;
     }
 }

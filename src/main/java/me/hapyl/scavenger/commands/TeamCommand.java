@@ -1,6 +1,7 @@
 package me.hapyl.scavenger.commands;
 
-import me.hapyl.scavenger.Team;
+import me.hapyl.scavenger.Main;
+import me.hapyl.scavenger.game.Team;
 import me.hapyl.spigotutils.module.chat.Chat;
 import me.hapyl.spigotutils.module.command.SimplePlayerCommand;
 import me.hapyl.spigotutils.module.util.Validate;
@@ -20,8 +21,24 @@ public class TeamCommand extends SimplePlayerCommand {
         // team join (Team)
         // team leave (Team)
 
+        if (Main.getManager().getBoard() != null) {
+            Chat.sendMessage(player, "&cUnable to switch teams during the game!");
+            return;
+        }
+
         if (args.length == 0) {
             Chat.sendMessage(player, "menu not ready yet");
+            return;
+        }
+
+        if (args.length == 1 && args[0].equalsIgnoreCase("leave")) {
+            final Team team = Team.getTeam(player);
+            if (team == null || team.isPlayer(player)) {
+                Chat.sendMessage(player, "&cYou are not in a team!");
+                return;
+            }
+
+            team.removePlayer(player);
             return;
         }
 
@@ -51,17 +68,8 @@ public class TeamCommand extends SimplePlayerCommand {
                 }
                 team.addPlayer(player);
             }
-
-            else if (firstArg.equalsIgnoreCase("leave")) {
-                if (team.isPlayer(player)) {
-                    Chat.sendMessage(player, "&cYou are not in a team!");
-                    return;
-                }
-
-                team.removePlayer(player);
-            }
-
         }
+
     }
 
     @Override

@@ -1,9 +1,7 @@
 package me.hapyl.scavenger.task;
 
-import me.hapyl.scavenger.Board;
 import me.hapyl.scavenger.Main;
-import me.hapyl.scavenger.Team;
-import me.hapyl.scavenger.task.tasks.DieFromCause;
+import me.hapyl.scavenger.game.Board;
 import me.hapyl.scavenger.task.tasks.SlayEntity;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -12,6 +10,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.inventory.ItemStack;
 
 public class Handler implements Listener {
 
@@ -36,7 +36,7 @@ public class Handler implements Listener {
             }
 
             final TaskCompletion completion = board.getTaskCompletion(slay);
-            completion.addCompletion(Team.getTeam(player), player);
+            completion.addCompletion(player, 1);
         }
     }
 
@@ -51,23 +51,54 @@ public class Handler implements Listener {
 
         // Player death check
         final boolean isDeath = ev.getFinalDamage() >= player.getHealth();
-        if (isDeath) {
-            final Board board = Main.getManager().getBoard();
-            if (board == null) {
-                return;
+        final Board board = Main.getManager().getBoard();
+        if (!isDeath || board == null) {
+            return;
+        }
+
+        final Task<?> task = board.findTask(Type.DIE_FROM_CAUSE, cause);
+        if (task == null) {
+            return;
+        }
+
+        final TaskCompletion completion = board.getTaskCompletion(task);
+        completion.addCompletion(player, 1);
+    }
+
+
+    @EventHandler()
+    public void handleItemPickup(EntityPickupItemEvent ev) {
+        final LivingEntity entity = ev.getEntity();
+        final Board board = Main.getManager().getBoard();
+        final ItemStack item = ev.getItem().getItemStack();
+
+        if (!(entity instanceof Player player) || board == null) {
+            return;
+        }
+
+        final Task<?> task = board.findTask(Type.GATHER_ITEM, item.getType());
+        if (task == null) {
+            return;
+        }
+
+        final TaskCompletion completion = board.getTaskCompletion(task);
+
+        final int completed = completion.getCompletion(player);
+        final int totalNeeded = task.getAmount();
+        final int needMore = totalNeeded - completed;
+
+        int canGive = 0;
+        for (int i = 0; i < needMore; i++) {
+            if (item.getAmount() <= 0) {
+                break;
             }
 
-            for (Task<?> task : board.getTasks()) {
-                if (task.getType() != Type.DIE_FROM_CAUSE) {
-                    continue;
-                }
-                final DieFromCause dieTask = (DieFromCause) task;
-                if (dieTask.getT() == cause) {
-                    final TaskCompletion completion = board.getTaskCompletion(task);
-                    completion.addCompletion(Team.getTeam(player), player);
-                }
-            }
+            canGive++;
+            item.setAmount(item.getAmount() - 1);
         }
+
+        ev.getItem().setItemStack(item);
+        completion.addCompletion(player, canGive);
     }
 
 

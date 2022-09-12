@@ -1,6 +1,7 @@
-package me.hapyl.scavenger;
+package me.hapyl.scavenger.game;
 
 import com.google.common.collect.Sets;
+import me.hapyl.scavenger.Message;
 import me.hapyl.spigotutils.module.chat.Chat;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -62,6 +63,10 @@ public enum Team {
 
     public String getName() {
         return color + Chat.capitalize(this) + "&7";
+    }
+
+    public String getNameCaps() {
+        return color + "&l" + this.name() + "&7";
     }
 
     @Nullable
