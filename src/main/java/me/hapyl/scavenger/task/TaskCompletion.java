@@ -6,6 +6,8 @@ import me.hapyl.scavenger.Main;
 import me.hapyl.scavenger.game.Board;
 import me.hapyl.scavenger.game.Team;
 import me.hapyl.spigotutils.module.chat.Chat;
+import me.hapyl.spigotutils.module.player.PlayerLib;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
 import javax.annotation.Nullable;
@@ -51,6 +53,11 @@ public class TaskCompletion {
         return getCompletion(team) >= task.getAmount();
     }
 
+    public boolean isComplete(Player player) {
+        final Team team = Team.getTeam(player);
+        return team != null && isComplete(team);
+    }
+
     public void addCompletion(Player player, int amount) {
         final Team team = Team.getTeam(player);
         if (team == null) {
@@ -70,20 +77,34 @@ public class TaskCompletion {
         completedTimes.put(team, next);
 
         team.message("&a%s &7advanced &b%s &7task. &8(%s/%s)", player.getName(), task.getName(), next, task.getAmount());
+        team.getPlayers().forEach(tm -> {
+            PlayerLib.playSound(tm, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 2.0f);
+        });
+
 
         if (isComplete(team)) {
-            final Board board = Main.getManager().getBoard();
+            final Board board = Main.getPlugin().getManager().getBoard();
             if (board == null) {
                 Chat.broadcast("&4Completion with no board???");
                 return;
             }
 
-            board.addPoints(team, getNextPointsAward());
+            final int nextPointsAward = getNextPointsAward();
+            board.addPoints(team, nextPointsAward);
             completed.add(team);
             playersCompleted.add(player);
 
             // broadcast
-            Chat.broadcast("&6&lSCAVENGER! &a%s &7(%s&7) completed &a%s&7!", player.getName(), team.getName(), task.getName());
+            Chat.broadcast(
+                    "&6&lSCAVENGER! &a%s &7(%s&7) completed &a%s&7! &6&l+%s points!",
+                    player.getName(),
+                    team.getName(),
+                    task.getName(),
+                    nextPointsAward
+            );
+            team.getPlayers().forEach(tm -> {
+                PlayerLib.playSound(tm, Sound.ENTITY_PLAYER_LEVELUP, 1.25f);
+            });
         }
     }
 

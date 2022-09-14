@@ -18,8 +18,8 @@ public class Manager extends Inject {
         return board;
     }
 
-    public void createBoard() {
-        board = new Board(30);
+    public void createBoard(int minutes) {
+        board = new Board(minutes == 0 ? 30 : minutes);
     }
 
     public void removeBoard() {

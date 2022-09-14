@@ -1,43 +1,101 @@
 package me.hapyl.scavenger.task;
 
+import me.hapyl.scavenger.InjectListener;
 import me.hapyl.scavenger.Main;
 import me.hapyl.scavenger.game.Board;
-import me.hapyl.scavenger.task.tasks.SlayEntity;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityBreedEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.inventory.CraftItemEvent;
+import org.bukkit.inventory.CraftingInventory;
 import org.bukkit.inventory.ItemStack;
 
-public class Handler implements Listener {
+public class Handler extends InjectListener {
+
+    public Handler(Main main) {
+        super(main);
+    }
 
     @EventHandler()
     public void handleEntityDeathEvent(EntityDeathEvent ev) {
         final LivingEntity entity = ev.getEntity();
         final Player player = entity.getKiller();
 
-        final Board board = Main.getManager().getBoard();
-        if (board == null) {
+        final Board board = getPlugin().getManager().getBoard();
+        if (board == null || player == null) {
             return;
         }
 
-        for (Task<?> task : board.getTasks()) {
-            if (task.getType() != Type.KILL_ENTITY) {
-                continue;
-            }
+        board.findTaskAndAdvance(Type.KILL_ENTITY, entity.getType(), player, 1);
+    }
 
-            final SlayEntity slay = (SlayEntity) task;
-            if (slay.getT() != entity.getType()) {
-                continue;
-            }
+    @EventHandler()
+    public void handleCraftItem(CraftItemEvent ev) {
+        final HumanEntity human = ev.getWhoClicked();
+        final ItemStack item = ev.getCurrentItem();
 
-            final TaskCompletion completion = board.getTaskCompletion(slay);
-            completion.addCompletion(player, 1);
+        final Board board = getPlugin().getManager().getBoard();
+        if (item == null || board == null || !(human instanceof Player player)) {
+            return;
         }
+
+        final Task<?> task = board.findTask(Type.CRAFT_ITEM, item.getType());
+        if (task == null) {
+            return;
+        }
+
+        final TaskCompletion completion = board.getTaskCompletion(task);
+
+        if (completion.isComplete(player)) {
+            return;
+        }
+
+        final int canGive = calculateCanGive(task, player, item);
+
+        ev.setCancelled(true);
+        final CraftingInventory craft = ev.getInventory();
+        final ItemStack[] matrix = craft.getMatrix();
+        for (ItemStack stack : matrix) {
+            if (stack == null) {
+                continue;
+            }
+            stack.setAmount(stack.getAmount() - 1);
+        }
+
+        craft.setMatrix(matrix);
+        completion.addCompletion(player, canGive);
+    }
+
+    @EventHandler()
+    public void handleItemPickup(EntityPickupItemEvent ev) {
+        final LivingEntity entity = ev.getEntity();
+        final Board board = getPlugin().getManager().getBoard();
+        final ItemStack item = ev.getItem().getItemStack();
+
+        if (!(entity instanceof Player player) || board == null) {
+            return;
+        }
+
+        final Task<?> task = board.findTask(Type.GATHER_ITEM, item.getType());
+        if (task == null) {
+            return;
+        }
+
+        final TaskCompletion completion = board.getTaskCompletion(task);
+        if (completion.isComplete(player)) {
+            return;
+        }
+
+        final int canGive = calculateCanGive(task, player, item);
+
+        ev.getItem().setItemStack(item);
+        completion.addCompletion(player, canGive);
     }
 
     @EventHandler()
@@ -51,41 +109,39 @@ public class Handler implements Listener {
 
         // Player death check
         final boolean isDeath = ev.getFinalDamage() >= player.getHealth();
-        final Board board = Main.getManager().getBoard();
+        final Board board = getPlugin().getManager().getBoard();
         if (!isDeath || board == null) {
             return;
         }
 
-        final Task<?> task = board.findTask(Type.DIE_FROM_CAUSE, cause);
-        if (task == null) {
-            return;
-        }
-
-        final TaskCompletion completion = board.getTaskCompletion(task);
-        completion.addCompletion(player, 1);
+        board.findTaskAndAdvance(Type.DIE_FROM_CAUSE, cause, player, 1);
     }
 
-
     @EventHandler()
-    public void handleItemPickup(EntityPickupItemEvent ev) {
+    public void handleBreedAnimals(EntityBreedEvent ev) {
         final LivingEntity entity = ev.getEntity();
-        final Board board = Main.getManager().getBoard();
-        final ItemStack item = ev.getItem().getItemStack();
+        final LivingEntity breeder = ev.getBreeder();
 
-        if (!(entity instanceof Player player) || board == null) {
+        if (!(breeder instanceof Player player)) {
             return;
         }
 
-        final Task<?> task = board.findTask(Type.GATHER_ITEM, item.getType());
-        if (task == null) {
+        final Board board = getPlugin().getManager().getBoard();
+        if (board == null) {
             return;
+        }
+
+        board.findTaskAndAdvance(Type.BREED_ANIMAL, entity.getType(), player, 1);
+    }
+
+    private int calculateCanGive(Task<?> task, Player player, ItemStack item) {
+        final Board board = getPlugin().getManager().getBoard();
+        if (board == null) {
+            return 0;
         }
 
         final TaskCompletion completion = board.getTaskCompletion(task);
-
-        final int completed = completion.getCompletion(player);
-        final int totalNeeded = task.getAmount();
-        final int needMore = totalNeeded - completed;
+        final int needMore = task.getAmount() - completion.getCompletion(player);
 
         int canGive = 0;
         for (int i = 0; i < needMore; i++) {
@@ -97,8 +153,7 @@ public class Handler implements Listener {
             item.setAmount(item.getAmount() - 1);
         }
 
-        ev.getItem().setItemStack(item);
-        completion.addCompletion(player, canGive);
+        return canGive;
     }
 
 

@@ -1,5 +1,6 @@
 package me.hapyl.scavenger.task;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import me.hapyl.spigotutils.module.util.CollectionUtils;
@@ -22,18 +23,21 @@ public class Type<T> {
     public static final Type<Material> GATHER_ITEM = new Type<>("Gatherer");
     public static final Type<EntityType> KILL_ENTITY = new Type<>("Slayer");
     public static final Type<EntityType> BREED_ANIMAL = new Type<>("Farmer");
-    public static final Type<EntityDamageEvent.DamageCause> DIE_FROM_CAUSE = new Type<>("Walking Dead");
+    public static final Type<EntityDamageEvent.DamageCause> DIE_FROM_CAUSE = new Type<>("Death");
 
+    public static List<Type<?>> values;
     public static Map<String, Type<?>> byName;
 
     static {
 
+        values = Lists.newArrayList();
         byName = Maps.newHashMap();
         for (Field field : Type.class.getFields()) {
             try {
                 final Object obj = field.get(null);
                 if (obj instanceof Type<?> t) {
                     byName.put(field.getName(), t);
+                    values.add(t);
                 }
             } catch (IllegalAccessException ignored) {
             }
@@ -79,7 +83,7 @@ public class Type<T> {
         // Death from cause
         for (EntityDamageEvent.DamageCause cause : values()) {
             switch (cause) {
-                case ENTITY_SWEEP_ATTACK, MELTING, VOID, SUICIDE, DRAGON_BREATH, CUSTOM, FLY_INTO_WALL, DRYOUT -> {
+                case ENTITY_SWEEP_ATTACK, MELTING, VOID, SUICIDE, DRAGON_BREATH, CUSTOM, FLY_INTO_WALL, DRYOUT, BLOCK_EXPLOSION -> {
                 }
                 default -> DIE_FROM_CAUSE.addAllowed(cause);
             }

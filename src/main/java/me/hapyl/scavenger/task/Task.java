@@ -3,9 +3,6 @@ package me.hapyl.scavenger.task;
 import me.hapyl.scavenger.Main;
 import me.hapyl.scavenger.game.Board;
 import me.hapyl.scavenger.game.Team;
-import me.hapyl.scavenger.task.tasks.BreedAnimal;
-import me.hapyl.scavenger.task.tasks.GatherItem;
-import me.hapyl.scavenger.task.tasks.SlayEntity;
 import me.hapyl.spigotutils.module.chat.Chat;
 import me.hapyl.spigotutils.module.inventory.ItemBuilder;
 import org.bukkit.Material;
@@ -40,13 +37,17 @@ public class Task<T> {
         return new ItemStack(Material.STONE);
     }
 
+    public void appendLore(ItemBuilder builder) {
+        builder.addSmartLore("&c&lSomeone forgot to add lore for this task, oh well, you will never know what to do ¯\\(ツ)_/¯");
+    }
+
     public ItemStack buildItem(Player player) {
-        final Board board = Main.getManager().getBoard();
+        final Board board = Main.getPlugin().getManager().getBoard();
         if (board == null) {
             return new ItemBuilder(Material.BEDROCK).setName("&4&lError!").addSmartLore("Could not a game, report this!", "&c").build();
         }
 
-        final ItemBuilder builder = new ItemBuilder(this.getMaterial());
+        final ItemBuilder builder = new ItemBuilder(this.getMaterial()).setAmount(amount);
         final TaskCompletion completion = board.getTaskCompletion(this);
         final Team playerTeam = Team.getTeam(player);
 
@@ -58,29 +59,7 @@ public class Task<T> {
         }
 
         builder.setName(getName());
-
-        if (this instanceof BreedAnimal breed) {
-            builder.addSmartLore("Your team must breed animals to advance this task.", "&8");
-            builder.addLore();
-            builder.addLore("&7Animals to breed &b&l" + Chat.capitalize(breed.getT()));
-            builder.addLore("&7Times to breed &b&l" + amount);
-        }
-        else if (this instanceof SlayEntity slay) {
-            builder.addSmartLore("Your team must kill a mob to advance this task.", "&8");
-            builder.addLore();
-            builder.addLore("&7Mob to kill &c&l" + Chat.capitalize(slay.getT()));
-            builder.addLore("&7Times to kill &c&l" + amount);
-        }
-        else if (this instanceof GatherItem gather) {
-            builder.addSmartLore(
-                    "Your team must gather an item to advance this task. Gathered item will be removed from your inventory.",
-                    "&8"
-            );
-            builder.addLore();
-            builder.addLore("&7Item to gather &a&l" + Chat.capitalize(gather.getT()));
-            builder.addLore("&7Times to kill &a&l" + amount);
-        }
-
+        appendLore(builder);
         builder.addLore();
 
         if (completion.isComplete(playerTeam)) {
@@ -120,6 +99,6 @@ public class Task<T> {
     }
 
     public String getName() {
-        return Chat.capitalize(t.toString()) + " " + type.getName();
+        return Chat.capitalize(t.toString()) + " &l" + type.getName();
     }
 }

@@ -2,6 +2,7 @@ package me.hapyl.scavenger.commands;
 
 import me.hapyl.scavenger.Main;
 import me.hapyl.scavenger.game.Team;
+import me.hapyl.scavenger.gui.TeamGUI;
 import me.hapyl.spigotutils.module.chat.Chat;
 import me.hapyl.spigotutils.module.command.SimplePlayerCommand;
 import me.hapyl.spigotutils.module.util.Validate;
@@ -21,13 +22,13 @@ public class TeamCommand extends SimplePlayerCommand {
         // team join (Team)
         // team leave (Team)
 
-        if (Main.getManager().getBoard() != null) {
+        if (Main.getPlugin().getManager().getBoard() != null) {
             Chat.sendMessage(player, "&cUnable to switch teams during the game!");
             return;
         }
 
         if (args.length == 0) {
-            Chat.sendMessage(player, "menu not ready yet");
+            new TeamGUI(player);
             return;
         }
 

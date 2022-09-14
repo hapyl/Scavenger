@@ -2,6 +2,7 @@ package me.hapyl.scavenger.scoreboard;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import me.hapyl.scavenger.Inject;
 import me.hapyl.scavenger.Main;
 import me.hapyl.scavenger.game.Board;
 import me.hapyl.scavenger.game.Manager;
@@ -19,18 +20,19 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-public class UIManager {
+public class UIManager extends Inject {
 
     private final Map<Player, Scoreboarder> playerScore;
     private final Manager manager;
 
-    public UIManager() {
+    public UIManager(Main main) {
+        super(main);
         playerScore = Maps.newHashMap();
-        manager = Main.getManager();
+        manager = getPlugin().getManager();
     }
 
     public void createScoreboard(Player player) {
-        playerScore.put(player, new Scoreboarder("&e&lSCAVENGER"));
+        playerScore.put(player, new Scoreboarder("&6&lSCAVENGER"));
     }
 
     public void updateTablist(Player player) {
@@ -56,7 +58,7 @@ public class UIManager {
                 list.add("&eYou're in %s &eteam!".formatted(team.getNameCaps()));
                 list.add("");
                 list.add("&7Teammates:");
-                final Set<UUID> players = team.getPlayers();
+                final Set<UUID> players = team.getUUIDs();
                 for (UUID uuid : players) {
                     final OfflinePlayer mate = Bukkit.getOfflinePlayer(uuid);
                     list.add("%s%s &7(&b%s&7)".formatted(team.getColor(), mate.getName(), board.getTasksCompleted(uuid)));
@@ -67,7 +69,7 @@ public class UIManager {
                 list.add("");
                 list.add("&7In Progress Tasks:");
                 final List<TaskCompletion> progress = board.getTaskInProgress(team);
-                if (progress == null) {
+                if (progress.isEmpty()) {
                     list.add("&8None!");
                 }
                 else {
@@ -106,7 +108,20 @@ public class UIManager {
             score.setLines("", "&eWaiting for game", "&eto begin...", "");
         }
         else {
-            score.setLines("game progress", "game progress", "game progress", "game progress");
+            score.setLines(
+                    "&8#" + board.getWorld().getHexName(),
+                    "",
+                    "&fTime Left: &e" + board.getTimeLeftString(),
+                    "&cI didn't finish scoreboard",
+                    "&cfor the game just yet!",
+                    "",
+                    "&7Top Teams: ",
+                    " &a- ???",
+                    " &a- ???",
+                    " &a- ???",
+                    "",
+                    "&e/scavenger &7to see board"
+            );
         }
 
         score.addPlayer(player);

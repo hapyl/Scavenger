@@ -2,6 +2,7 @@ package me.hapyl.scavenger;
 
 import me.hapyl.spigotutils.module.chat.Chat;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
 
 public class Message {
 
@@ -15,4 +16,16 @@ public class Message {
         Chat.broadcast(PREFIX + message, replacements);
     }
 
+    public static void sendStartTitle(Player player) {
+
+    }
+
+    private static void runLater(Runnable run, int later) {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                run.run();
+            }
+        }.runTaskLater(Main.getPlugin(), later);
+    }
 }

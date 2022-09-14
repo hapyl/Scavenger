@@ -98,6 +98,7 @@ public class WrittenTextureValues {
         damageCauseTexture.put(EntityDamageEvent.DamageCause.LAVA, Material.LAVA_BUCKET);
         damageCauseTexture.put(EntityDamageEvent.DamageCause.DROWNING, Material.WATER_BUCKET);
         damageCauseTexture.put(EntityDamageEvent.DamageCause.BLOCK_EXPLOSION, Material.TNT);
+        damageCauseTexture.put(EntityDamageEvent.DamageCause.ENTITY_EXPLOSION, Material.CREEPER_HEAD);
         damageCauseTexture.put(EntityDamageEvent.DamageCause.LIGHTNING, Material.LIGHTNING_ROD);
         damageCauseTexture.put(EntityDamageEvent.DamageCause.STARVATION, Material.ROTTEN_FLESH);
         damageCauseTexture.put(EntityDamageEvent.DamageCause.POISON, Material.POISONOUS_POTATO);
