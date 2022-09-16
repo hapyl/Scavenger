@@ -55,8 +55,6 @@ public class UIManager extends Inject {
                 list.add("&cNot in a team!");
             }
             else {
-                list.add("&eYou're in %s &eteam!".formatted(team.getNameCaps()));
-                list.add("");
                 list.add("&7Teammates:");
                 final Set<UUID> players = team.getUUIDs();
                 for (UUID uuid : players) {
@@ -105,22 +103,22 @@ public class UIManager extends Inject {
 
         // Lobby
         if (board == null) {
-            score.setLines("", "&eWaiting for game", "&eto begin...", "");
+            score.setLines("", "&eWaiting for game to begin...", "");
         }
         else {
+            final List<Team> topTeams = board.getTopTeams(3);
+
             score.setLines(
                     "&8#" + board.getWorld().getHexName(),
                     "",
                     "&fTime Left: &e" + board.getTimeLeftString(),
-                    "&cI didn't finish scoreboard",
-                    "&cfor the game just yet!",
                     "",
-                    "&7Top Teams: ",
-                    " &a- ???",
-                    " &a- ???",
-                    " &a- ???",
+                    "&fTop Teams: ",
+                    " &7- " + (topTeams.size() > 0 ? topTeams.get(0).getName() : "&8???"),
+                    " &7- " + (topTeams.size() > 1 ? topTeams.get(1).getName() : "&8???"),
+                    " &7- " + (topTeams.size() > 2 ? topTeams.get(2).getName() : "&8???"),
                     "",
-                    "&e/scavenger &7to see board"
+                    "&e/scavenger &fto see board"
             );
         }
 

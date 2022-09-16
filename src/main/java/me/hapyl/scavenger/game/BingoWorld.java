@@ -5,10 +5,7 @@ import me.hapyl.spigotutils.module.chat.Chat;
 import me.hapyl.spigotutils.module.player.EffectType;
 import me.hapyl.spigotutils.module.player.PlayerLib;
 import me.hapyl.spigotutils.module.util.ThreadRandom;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.World;
-import org.bukkit.WorldCreator;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 
@@ -24,7 +21,7 @@ public class BingoWorld {
 
         Chat.broadcastOp("&c[ADMIN] &7Generating bingo world '%s'...", creator.name());
         Chat.broadcastOp("&c[ADMIN] &7The server WILL lag during generation!");
-        Chat.sendTitles("&a&lGENERATING WORLD", "&7Please wait...", 0, 200, 0);
+        Chat.sendTitles("&a&lGENERATING WORLD", "&7Please wait...", 0, 20000, 0);
 
         world = creator.createWorld();
         if (world == null) {
@@ -50,8 +47,11 @@ public class BingoWorld {
             return;
         }
 
-        world.getWorldBorder().setCenter(world.getSpawnLocation());
-        world.getWorldBorder().setSize(1000);
+        world.setGameRule(GameRule.KEEP_INVENTORY, true);
+
+        final WorldBorder worldBorder = world.getWorldBorder();
+        worldBorder.setCenter(world.getSpawnLocation());
+        worldBorder.setSize(1000);
     }
 
     private void preparePlayer(Player player) {

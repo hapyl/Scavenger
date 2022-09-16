@@ -28,22 +28,6 @@
                     <target>17</target>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.4</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <createDependencyReducedPom>false</createDependencyReducedPom>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
         <resources>
             <resource>
@@ -79,13 +63,13 @@
             <systemPath>E:/_Server18/plugins/EternaAPI.jar
             </systemPath>
         </dependency>
-        <dependency>
-            <groupId>local.remapped</groupId>
-            <artifactId>local</artifactId>
-            <version>1.0</version>
-            <scope>system</scope>
-            <systemPath>E:/Development/BuildTools/Spigot/Spigot-Server/target/spigot-1.19.2-R0.1-SNAPSHOT-remapped.jar
-            </systemPath>
-        </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>local.remapped</groupId>-->
+        <!--            <artifactId>local</artifactId>-->
+        <!--            <version>1.0</version>-->
+        <!--            <scope>system</scope>-->
+        <!--            <systemPath>E:/Development/BuildTools/Spigot/Spigot-Server/target/spigot-1.19.2-R0.1-SNAPSHOT-remapped.jar-->
+        <!--            </systemPath>-->
+        <!--        </dependency>-->
     </dependencies>
 </project>

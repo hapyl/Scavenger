@@ -4,7 +4,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import me.hapyl.spigotutils.module.util.CollectionUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.advancement.Advancement;
 import org.bukkit.entity.Breedable;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -24,6 +26,8 @@ public class Type<T> {
     public static final Type<EntityType> KILL_ENTITY = new Type<>("Slayer");
     public static final Type<EntityType> BREED_ANIMAL = new Type<>("Farmer");
     public static final Type<EntityDamageEvent.DamageCause> DIE_FROM_CAUSE = new Type<>("Death");
+    public static final Type<EntityType> DIE_FROM_ENTITY = new Type<>("Victim");
+    public static final Type<Advancement> ADVANCEMENT_ADVANCER = new Type<>("Advancer");
 
     public static List<Type<?>> values;
     public static Map<String, Type<?>> byName;
@@ -49,14 +53,18 @@ public class Type<T> {
             if (material.isItem()) {
                 final String materialName = material.name();
                 // TODO: 012. 12/09/2022 - Validate items
-                if (!stringContainsAny(materialName, "SPAWN_EGG")) {
+                if (!stringContainsAny(materialName, "SPAWN_EGG", "COMMAND_BLOCK")) {
                     GATHER_ITEM.addAllowed(material);
                 }
             }
 
             // Craftable
             if (isUsedInRecipe(material)) {
-                CRAFT_ITEM.addAllowed(material);
+                switch (material) {
+                    case CRAFTING_TABLE -> {
+                    }
+                    default -> CRAFT_ITEM.addAllowed(material);
+                }
             }
         }
 
@@ -66,7 +74,12 @@ public class Type<T> {
                 switch (value) {
                     case PLAYER, ENDER_DRAGON, WITHER, SHULKER, ILLUSIONER, ZOMBIE_HORSE, ARMOR_STAND -> {
                     }
-                    default -> KILL_ENTITY.addAllowed(value);
+                    default -> {
+                        KILL_ENTITY.addAllowed(value);
+
+                        // TODO: Validate hostile
+                        DIE_FROM_ENTITY.addAllowed(value);
+                    }
                 }
             }
 
@@ -88,6 +101,12 @@ public class Type<T> {
                 default -> DIE_FROM_CAUSE.addAllowed(cause);
             }
         }
+
+        // Advancements
+        Bukkit.advancementIterator().forEachRemaining(adv -> {
+            // TODO: Validate
+            ADVANCEMENT_ADVANCER.addAllowed(adv);
+        });
 
     }
 

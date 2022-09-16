@@ -6,6 +6,7 @@ import me.hapyl.scavenger.gui.TeamGUI;
 import me.hapyl.spigotutils.module.chat.Chat;
 import me.hapyl.spigotutils.module.command.SimplePlayerCommand;
 import me.hapyl.spigotutils.module.util.Validate;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -49,6 +50,15 @@ public class TeamCommand extends SimplePlayerCommand {
 
             if (team == null) {
                 Chat.sendMessage(player, "&cInvalid team!");
+                return;
+            }
+
+            if (firstArg.equalsIgnoreCase("joinall")) {
+                for (Player pl : Bukkit.getOnlinePlayers()) {
+                    team.addPlayer(pl);
+                }
+
+                Chat.sendMessage(player, "&aAdded all players to %s.", team.getName());
                 return;
             }
 

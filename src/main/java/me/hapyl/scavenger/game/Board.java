@@ -14,7 +14,6 @@ import me.hapyl.spigotutils.module.chat.LazyHoverEvent;
 import me.hapyl.spigotutils.module.reflect.glow.Glowing;
 import me.hapyl.spigotutils.module.util.ThreadRandom;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
@@ -60,7 +59,7 @@ public class Board {
                         continue;
                     }
 
-                    Glowing.glow(teammate, ChatColor.GREEN, (int) timeLimitInMinutes * 1200, player);
+                    Glowing.glow(teammate, team.getColor(), (int) timeLimitInMinutes * 1200, player);
                 }
             }
         });
@@ -137,7 +136,9 @@ public class Board {
 
     public void generateTasks() {
         for (int i = 0; i < 25; i++) {
-            final int random = ThreadRandom.nextInt(5);
+            int random = ThreadRandom.nextInt(Type.values.size());
+
+            //            random = 6;
 
             switch (random) {
                 case 0 -> tasks.add(new BreedAnimal(randomAllowedElement(Type.BREED_ANIMAL), range(1, 4)));
@@ -145,6 +146,8 @@ public class Board {
                 case 2 -> tasks.add(new DieFromCause(randomAllowedElement(Type.DIE_FROM_CAUSE)));
                 case 3 -> tasks.add(new GatherItem(randomAllowedElement(Type.GATHER_ITEM), range(2, 6)));
                 case 4 -> tasks.add(new SlayEntity(randomAllowedElement(Type.KILL_ENTITY), range(1, 5)));
+                case 5 -> tasks.add(new DieFromEntity(randomAllowedElement(Type.DIE_FROM_ENTITY), range(1, 2)));
+                //                case 6 -> tasks.add(new AdvanceAdvancement(randomAllowedElement(Type.ADVANCEMENT_ADVANCER)));
             }
         }
     }
@@ -160,7 +163,7 @@ public class Board {
     }
 
     private int range(int min, int max) {
-        return ThreadRandom.nextInt(min, max);
+        return ThreadRandom.nextInt(min, max + 1);
     }
 
     public long getStartedAt() {
@@ -187,7 +190,7 @@ public class Board {
         // Stop glowing
         Team.forEachTeam(team -> {
             team.getPlayers().forEach(player -> {
-                EternaPlugin.getPlugin().getGlowingManager().removeGlowing(player);
+                EternaPlugin.getPlugin().getGlowingManager().stopGlowing(player);
             });
         });
 
@@ -197,7 +200,7 @@ public class Board {
             Chat.sendClickableHoverableMessage(
                     player,
                     LazyClickEvent.RUN_COMMAND.of("/s deleteworld " + worldName),
-                    LazyHoverEvent.SHOW_TEXT.of("&eClick to &c&llPERMANENTLY DELETE &e'%s'!", worldName),
+                    LazyHoverEvent.SHOW_TEXT.of("&eClick to &c&lPERMANENTLY DELETE &e'%s'!", worldName),
                     "&6&lSCAVENGER! &7If you wish, you may &c&lPERMANENTLY DELETE &7the world. &e(Click)"
             );
         });

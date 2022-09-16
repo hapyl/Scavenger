@@ -15,7 +15,7 @@ public class Task<T> {
     private final Type<T> type;
     private final int amount;
 
-    protected Task(Type<T> type, T t, int amount) {
+    public Task(Type<T> type, T t, int amount) {
         this.type = type;
         this.t = t;
         this.amount = amount;

@@ -26,6 +26,6 @@ public class GatherItem extends Task<Material> {
         );
         builder.addLore();
         builder.addLore("&7Item to gather &a&l" + Chat.capitalize(getT()));
-        builder.addLore("&7Times to kill &a&l" + getAmount());
+        builder.addLore("&7Times to gather &a&l" + getAmount());
     }
 }
