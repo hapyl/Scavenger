@@ -2,7 +2,9 @@ package me.hapyl.scavenger.game;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import me.hapyl.scavenger.Message;
+import me.hapyl.scavenger.task.LinkedType;
 import me.hapyl.scavenger.task.Task;
 import me.hapyl.scavenger.task.TaskCompletion;
 import me.hapyl.scavenger.task.Type;
@@ -11,11 +13,15 @@ import me.hapyl.spigotutils.EternaPlugin;
 import me.hapyl.spigotutils.module.chat.Chat;
 import me.hapyl.spigotutils.module.chat.LazyClickEvent;
 import me.hapyl.spigotutils.module.chat.LazyHoverEvent;
+import me.hapyl.spigotutils.module.player.PlayerLib;
 import me.hapyl.spigotutils.module.reflect.glow.Glowing;
+import me.hapyl.spigotutils.module.util.BukkitUtils;
 import me.hapyl.spigotutils.module.util.ThreadRandom;
 import org.bukkit.Bukkit;
+import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -25,18 +31,24 @@ import java.util.UUID;
 
 public class Board {
 
-    private final long startedAt;
     private final long timeLimit;
+    private long startedAt;
 
+    private final Manager manager;
     private final List<Task<?>> tasks;
+    private final List<Type<?>> types;
     private final Map<Task<?>, TaskCompletion> taskCompleted;
+    private final Map<UUID, Set<Task<?>>> pinned;
     private final Map<Team, Integer> teamPoints;
     private final BingoWorld world;
     private final Map<UUID, BoardSettings> settings;
 
-    public Board(long timeLimitInMinutes) {
+    public Board(Manager manager, long timeLimitInMinutes) {
+        this.manager = manager;
         this.timeLimit = timeLimitInMinutes * 60000;
         this.tasks = Lists.newArrayList();
+        this.types = Lists.newArrayList();
+        this.pinned = Maps.newHashMap();
         this.taskCompleted = Maps.newHashMap();
         this.teamPoints = Maps.newHashMap();
         this.settings = Maps.newHashMap();
@@ -46,9 +58,6 @@ public class Board {
 
         // Generate World
         world = new BingoWorld();
-
-        // Start timer after world-gen
-        this.startedAt = System.currentTimeMillis();
 
         // Apply team glowing
         Team.forEachTeam(team -> {
@@ -63,11 +72,34 @@ public class Board {
                 }
             }
         });
+
+        // Schedule starting
+        new BukkitRunnable() {
+            private int startTime = 200;
+
+            @Override
+            public void run() {
+                if (startTime-- < 0) {
+                    startedAt = System.currentTimeMillis();
+                    this.cancel();
+
+                    Chat.sendTitles("&a&lTHE GAME BEGINS!", "", 10, 60, 10);
+
+                    PlayerLib.playSound(Sound.ENTITY_WITHER_SKELETON_DEATH, 0.75f);
+                    PlayerLib.playSound(Sound.ENTITY_BLAZE_HURT, 0.25f);
+                    PlayerLib.playSound(Sound.ENTITY_PLAYER_LEVELUP, 1.25f);
+
+                    return;
+                }
+
+                Chat.sendTitles("&a&lSTARTING IN", "&b%ss".formatted(BukkitUtils.roundTick(startTime)), 0, 20, 0);
+            }
+        }.runTaskTimer(manager.getPlugin(), 0L, 1L);
     }
 
     public BoardSettings getSettings(Player player) {
         final UUID uuid = player.getUniqueId();
-        return settings.computeIfAbsent(uuid, t -> new BoardSettings(uuid));
+        return settings.computeIfAbsent(uuid, t -> new BoardSettings(this, uuid));
     }
 
     public BingoWorld getWorld() {
@@ -134,35 +166,39 @@ public class Board {
         return taskCompleted.computeIfAbsent(task, TaskCompletion::new);
     }
 
+    // Jesus this is probably the worst implementation,
+    // but I can't think of anything better than this.
     public void generateTasks() {
         for (int i = 0; i < 25; i++) {
-            int random = ThreadRandom.nextInt(Type.values.size());
+            final LinkedType type = manager.getWeight().get();
 
-            //            random = 6;
+            final Type<?> link = type.getLink();
+            if (!types.contains(link)) {
+                types.add(link);
+            }
 
-            switch (random) {
-                case 0 -> tasks.add(new BreedAnimal(randomAllowedElement(Type.BREED_ANIMAL), range(1, 4)));
-                case 1 -> tasks.add(new CraftItem(randomAllowedElement(Type.CRAFT_ITEM), range(1, 2)));
-                case 2 -> tasks.add(new DieFromCause(randomAllowedElement(Type.DIE_FROM_CAUSE)));
-                case 3 -> tasks.add(new GatherItem(randomAllowedElement(Type.GATHER_ITEM), range(2, 6)));
-                case 4 -> tasks.add(new SlayEntity(randomAllowedElement(Type.KILL_ENTITY), range(1, 5)));
-                case 5 -> tasks.add(new DieFromEntity(randomAllowedElement(Type.DIE_FROM_ENTITY), range(1, 2)));
-                //                case 6 -> tasks.add(new AdvanceAdvancement(randomAllowedElement(Type.ADVANCEMENT_ADVANCER)));
+            switch (type) {
+                case CRAFT_ITEM -> tasks.add(new CraftItem(this));
+                case GATHER_ITEM -> tasks.add(new GatherItem(this));
+                case BREED_ANIMAL -> tasks.add(new BreedAnimal(this));
+                case DIE_FROM_CAUSE -> tasks.add(new DieFromCause(this));
+                case DIE_FROM_ENTITY -> tasks.add(new DieFromEntity(this));
+                case KILL_ENTITY -> tasks.add(new SlayEntity(this));
             }
         }
     }
 
-    private <T> T randomAllowedElement(Type<T> type) {
+    public <T> T getRandomAllowedOf(Type<T> type) {
         final T random = type.randomAllowed();
         for (Task<?> task : tasks) {
             if (task.getT().equals(random)) {
-                return randomAllowedElement(type);
+                return getRandomAllowedOf(type);
             }
         }
         return random;
     }
 
-    private int range(int min, int max) {
+    public int getRandomRange(int min, int max) {
         return ThreadRandom.nextInt(min, max + 1);
     }
 
@@ -256,5 +292,35 @@ public class Board {
 
     public String getTimeLeftString() {
         return new SimpleDateFormat("mm:ss").format(getTimeLeft());
+    }
+
+    public int getTaskTypeAmount(Type<?> type) {
+        int i = 0;
+        for (Task<?> task : tasks) {
+            if (task.getType() == type) {
+                i++;
+            }
+        }
+        return i;
+    }
+
+    public List<Type<?>> getTypes() {
+        return types;
+    }
+
+    public Set<Task<?>> getPinnedTasks(Player player) {
+        return pinned.computeIfAbsent(player.getUniqueId(), t -> Sets.newLinkedHashSet());
+    }
+
+    public boolean isPinned(Player player, Task<?> task) {
+        return getPinnedTasks(player).contains(task);
+    }
+
+    public void addPinned(Player player, Task<?> task) {
+        getPinnedTasks(player).add(task);
+    }
+
+    public void removePinned(Player player, Task<?> task) {
+        getPinnedTasks(player).remove(task);
     }
 }

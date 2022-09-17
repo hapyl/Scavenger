@@ -78,7 +78,11 @@ public class Type<T> {
                         KILL_ENTITY.addAllowed(value);
 
                         // TODO: Validate hostile
-                        DIE_FROM_ENTITY.addAllowed(value);
+                        switch (value) {
+                            case SKELETON -> {
+                            }
+                            default -> DIE_FROM_ENTITY.addAllowed(value);
+                        }
                     }
                 }
             }
@@ -96,7 +100,7 @@ public class Type<T> {
         // Death from cause
         for (EntityDamageEvent.DamageCause cause : values()) {
             switch (cause) {
-                case ENTITY_SWEEP_ATTACK, MELTING, VOID, SUICIDE, DRAGON_BREATH, CUSTOM, FLY_INTO_WALL, DRYOUT, BLOCK_EXPLOSION -> {
+                case ENTITY_SWEEP_ATTACK, MELTING, VOID, SUICIDE, DRAGON_BREATH, CUSTOM, FLY_INTO_WALL, DRYOUT, BLOCK_EXPLOSION, POISON -> {
                 }
                 default -> DIE_FROM_CAUSE.addAllowed(cause);
             }

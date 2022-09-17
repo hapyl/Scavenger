@@ -1,5 +1,6 @@
 package me.hapyl.scavenger.task.tasks;
 
+import me.hapyl.scavenger.game.Board;
 import me.hapyl.scavenger.task.Task;
 import me.hapyl.scavenger.task.Type;
 import me.hapyl.spigotutils.module.inventory.ItemBuilder;
@@ -9,8 +10,8 @@ import org.bukkit.advancement.AdvancementDisplay;
 import org.bukkit.inventory.ItemStack;
 
 public class AdvanceAdvancement extends Task<Advancement> {
-    public AdvanceAdvancement(Advancement advancement) {
-        super(Type.ADVANCEMENT_ADVANCER, advancement, 1);
+    public AdvanceAdvancement(Board board) {
+        super(Type.ADVANCEMENT_ADVANCER, board, 1, 1);
     }
 
     @Override

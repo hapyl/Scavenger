@@ -1,6 +1,5 @@
 package me.hapyl.scavenger.scoreboard;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import me.hapyl.scavenger.Inject;
 import me.hapyl.scavenger.Main;
@@ -9,6 +8,7 @@ import me.hapyl.scavenger.game.Manager;
 import me.hapyl.scavenger.game.Team;
 import me.hapyl.scavenger.task.Task;
 import me.hapyl.scavenger.task.TaskCompletion;
+import me.hapyl.scavenger.utils.StringConcator;
 import me.hapyl.spigotutils.module.chat.Chat;
 import me.hapyl.spigotutils.module.scoreboard.Scoreboarder;
 import org.bukkit.Bukkit;
@@ -49,45 +49,66 @@ public class UIManager extends Inject {
             setFooter(player, "", "&eWaiting for game to begin...", "");
         }
         else {
-            final List<String> list = Lists.newArrayList();
-            list.add("");
+            final StringConcator sc = new StringConcator();
+            sc.addEmpty();
             if (team == null) {
-                list.add("&cNot in a team!");
+                sc.add("&cNot in a team!");
             }
             else {
-                list.add("&7Teammates:");
+                // Team display
+                sc.add("&f&lYou Team: &7(&e&l%s&7)", board.getPoints(team));
                 final Set<UUID> players = team.getUUIDs();
                 for (UUID uuid : players) {
                     final OfflinePlayer mate = Bukkit.getOfflinePlayer(uuid);
-                    list.add("%s%s &7(&b%s&7)".formatted(team.getColor(), mate.getName(), board.getTasksCompleted(uuid)));
+                    sc.add("%s%s &7(&b%s&7)".formatted(team.getColor(), mate.getName(), board.getTasksCompleted(uuid)));
                 }
 
-                list.add("");
-                list.add("&7Team Score: &e&l" + board.getPoints(team));
-                list.add("");
-                list.add("&7In Progress Tasks:");
+                // Team in progress tasks
+                sc.add("");
+                sc.add("&f&lIn Progress Tasks:");
                 final List<TaskCompletion> progress = board.getTaskInProgress(team);
                 if (progress.isEmpty()) {
-                    list.add("&8None!");
+                    sc.add("&8None!");
                 }
                 else {
                     int shown = 0;
                     for (TaskCompletion completion : progress) {
                         if (shown >= 5) {
-                            list.add("&8And %s more!".formatted(progress.size() - shown));
-                            list.add("&8Use &e/scavenger &8to see!");
+                            sc.add("&8And %s more!", progress.size() - shown);
                             break;
                         }
+
                         final Task<?> task = completion.getTask();
-                        list.add("&a%s &7(%s&7/%s&7)".formatted(task.getName(), completion.getCompletion(team), task.getAmount()));
+                        sc.add("&a%s &7(%s&7/%s&7)".formatted(task.getName(), completion.getCompletion(team), task.getAmount()));
+                        shown++;
+                    }
+                }
+
+                // Pinned tasks
+                sc.addEmpty();
+                sc.add("&f&lPinned Tasks:");
+                final Set<Task<?>> pinned = board.getPinnedTasks(player);
+                if (pinned.isEmpty()) {
+                    sc.add("&8None!");
+                    sc.add("&7Pin tasks by clicking at them.");
+                    sc.add("&7Pinned tasks are NOT shared.");
+                }
+                else {
+                    int shown = 0;
+                    for (Task<?> task : pinned) {
+                        if (shown >= 5) {
+                            sc.add("&8And %s more!", pinned.size() - shown);
+                            break;
+                        }
+
+                        final TaskCompletion completion = board.getTaskCompletion(task);
+                        sc.add("&a%s &7(%s&7/%s&7)".formatted(task.getName(), completion.getCompletion(team), task.getAmount()));
                         shown++;
                     }
                 }
             }
 
-            list.add("");
-
-            setFooter(player, list.toArray(new String[] {}));
+            setFooter(player, sc.toString());
         }
     }
 
@@ -114,9 +135,9 @@ public class UIManager extends Inject {
                     "&fTime Left: &e" + board.getTimeLeftString(),
                     "",
                     "&fTop Teams: ",
-                    " &7- " + (topTeams.size() > 0 ? topTeams.get(0).getName() : "&8???"),
-                    " &7- " + (topTeams.size() > 1 ? topTeams.get(1).getName() : "&8???"),
-                    " &7- " + (topTeams.size() > 2 ? topTeams.get(2).getName() : "&8???"),
+                    " &7- " + (topTeams.size() > 0 ? topTeams.get(0).getNameCaps() : "&8???"),
+                    " &7- " + (topTeams.size() > 1 ? topTeams.get(1).getNameCaps() : "&8???"),
+                    " &7- " + (topTeams.size() > 2 ? topTeams.get(2).getNameCaps() : "&8???"),
                     "",
                     "&e/scavenger &fto see board"
             );

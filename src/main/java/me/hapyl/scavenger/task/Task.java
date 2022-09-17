@@ -11,14 +11,16 @@ import org.bukkit.inventory.ItemStack;
 
 public class Task<T> {
 
+    private final Board board;
     private final T t;
     private final Type<T> type;
     private final int amount;
 
-    public Task(Type<T> type, T t, int amount) {
+    public Task(Type<T> type, Board board, int m, int mx) {
         this.type = type;
-        this.t = t;
-        this.amount = amount;
+        this.t = board.getRandomAllowedOf(type);
+        this.amount = m == mx ? m : board.getRandomRange(m, mx);
+        this.board = board;
     }
 
     public T getT() {
@@ -93,6 +95,15 @@ public class Task<T> {
                 builder.addLore(" &e&l5");
                 builder.addLore(" &8&oMinimum reward reached.");
             }
+        }
+
+        builder.addLore();
+        if (board.isPinned(player, this)) {
+            builder.addLore("&d&lPINNED!");
+            builder.addLore("&eClick to unpin!");
+        }
+        else {
+            builder.addLore("&eClick to pin!");
         }
 
         return builder.hideFlags().build();

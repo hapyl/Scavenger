@@ -1,5 +1,6 @@
 package me.hapyl.scavenger.task.tasks;
 
+import me.hapyl.scavenger.game.Board;
 import me.hapyl.scavenger.task.Task;
 import me.hapyl.scavenger.task.Type;
 import me.hapyl.spigotutils.module.chat.Chat;
@@ -9,8 +10,8 @@ import org.bukkit.inventory.ItemStack;
 
 public class GatherItem extends Task<Material> {
 
-    public GatherItem(Material material, int amount) {
-        super(Type.GATHER_ITEM, material, amount);
+    public GatherItem(Board board) {
+        super(Type.GATHER_ITEM, board, 2, 6);
     }
 
     @Override
@@ -28,4 +29,5 @@ public class GatherItem extends Task<Material> {
         builder.addLore("&7Item to gather &a&l" + Chat.capitalize(getT()));
         builder.addLore("&7Times to gather &a&l" + getAmount());
     }
+
 }

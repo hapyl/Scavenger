@@ -1,5 +1,6 @@
 package me.hapyl.scavenger.task.tasks;
 
+import me.hapyl.scavenger.game.Board;
 import me.hapyl.scavenger.task.Task;
 import me.hapyl.scavenger.task.Type;
 import me.hapyl.scavenger.utils.WrittenTextureValues;
@@ -9,8 +10,9 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 
 public class DieFromEntity extends Task<EntityType> {
-    public DieFromEntity(EntityType entityType, int amount) {
-        super(Type.DIE_FROM_ENTITY, entityType, amount);
+
+    public DieFromEntity(Board board) {
+        super(Type.DIE_FROM_ENTITY, board, 1, 1);
     }
 
     @Override
@@ -25,4 +27,5 @@ public class DieFromEntity extends Task<EntityType> {
         builder.addLore("&7Die from &b&l" + Chat.capitalize(getT()));
         builder.addLore("&7Times to die &b&l" + getAmount());
     }
+
 }

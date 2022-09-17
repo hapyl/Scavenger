@@ -3,12 +3,17 @@ package me.hapyl.scavenger.game;
 import com.google.common.collect.Sets;
 import me.hapyl.scavenger.Message;
 import me.hapyl.spigotutils.module.chat.Chat;
+import me.hapyl.spigotutils.module.inventory.ItemBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 
 import javax.annotation.Nullable;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -131,4 +136,40 @@ public enum Team {
 
         addPlayer(player);
     }
+
+    public void giveKitStart(Player player) {
+        final PlayerInventory inventory = player.getInventory();
+
+        final int bonusItem = new Random().nextInt(3);
+
+        inventory.addItem(createItem(Material.STONE_PICKAXE, "Started Pickaxe"));
+        inventory.addItem(createItem(Material.STONE_SHOVEL, "Started Shovel"));
+        inventory.addItem(createItem(Material.STONE_AXE, "Started Axe"));
+        inventory.addItem(createItem(Material.BREAD, 16, "Bread"));
+
+        // Change one of the tools to iron (Bonus)
+        switch (bonusItem) {
+            case 0 -> inventory.setItem(0, createItem(Material.IRON_PICKAXE, "Bonus Pickaxe"));
+            case 1 -> inventory.setItem(1, createItem(Material.IRON_SHOVEL, "Bonus Shovel"));
+            case 2 -> inventory.setItem(2, createItem(Material.IRON_AXE, "Bonus Axe"));
+        }
+
+        final ItemBuilder chest = new ItemBuilder(Material.LEATHER_CHESTPLATE);
+
+        switch (color) {
+            case RED -> inventory.setChestplate(chest.setLeatherArmorColor(Color.RED).build());
+            case GREEN -> inventory.setChestplate(chest.setLeatherArmorColor(Color.GREEN).build());
+            case BLUE -> inventory.setChestplate(chest.setLeatherArmorColor(Color.BLUE).build());
+            case LIGHT_PURPLE -> inventory.setChestplate(chest.setLeatherArmorColor(Color.PURPLE).build());
+        }
+    }
+
+    private ItemStack createItem(Material material, int amount, String name) {
+        return new ItemBuilder(material).setAmount(amount).setName(name).build();
+    }
+
+    private ItemStack createItem(Material material, String name) {
+        return createItem(material, 1, name);
+    }
+
 }

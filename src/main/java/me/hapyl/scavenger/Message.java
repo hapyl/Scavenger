@@ -16,10 +16,6 @@ public class Message {
         Chat.broadcast(PREFIX + message, replacements);
     }
 
-    public static void sendStartTitle(Player player) {
-
-    }
-
     private static void runLater(Runnable run, int later) {
         new BukkitRunnable() {
             @Override

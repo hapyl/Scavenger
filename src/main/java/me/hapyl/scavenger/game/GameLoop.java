@@ -23,7 +23,7 @@ public class GameLoop extends Inject implements Runnable {
 
             if (board != null) {
                 final long timeLeft = board.getTimeLeft();
-                if (timeLeft < 0) {
+                if (board.getStartedAt() != 0L && timeLeft < 0) {
                     manager.removeBoard();
                     return;
                 }

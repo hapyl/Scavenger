@@ -1,5 +1,6 @@
 package me.hapyl.scavenger.task.tasks;
 
+import me.hapyl.scavenger.game.Board;
 import me.hapyl.scavenger.task.Task;
 import me.hapyl.scavenger.task.Type;
 import me.hapyl.scavenger.utils.WrittenTextureValues;
@@ -10,8 +11,8 @@ import org.bukkit.inventory.ItemStack;
 
 public class BreedAnimal extends Task<EntityType> {
 
-    public BreedAnimal(EntityType type, int amount) {
-        super(Type.BREED_ANIMAL, type, amount);
+    public BreedAnimal(Board board) {
+        super(Type.BREED_ANIMAL, board, 1, 2);
     }
 
     @Override
@@ -26,4 +27,5 @@ public class BreedAnimal extends Task<EntityType> {
         builder.addLore("&7Animals to breed &b&l" + Chat.capitalize(getT()));
         builder.addLore("&7Times to breed &b&l" + getAmount());
     }
+
 }

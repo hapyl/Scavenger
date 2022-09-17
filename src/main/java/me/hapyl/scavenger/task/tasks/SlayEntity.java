@@ -1,5 +1,6 @@
 package me.hapyl.scavenger.task.tasks;
 
+import me.hapyl.scavenger.game.Board;
 import me.hapyl.scavenger.task.Task;
 import me.hapyl.scavenger.task.Type;
 import me.hapyl.scavenger.utils.WrittenTextureValues;
@@ -10,8 +11,8 @@ import org.bukkit.inventory.ItemStack;
 
 public class SlayEntity extends Task<EntityType> {
 
-    public SlayEntity(EntityType type, int amount) {
-        super(Type.KILL_ENTITY, type, amount);
+    public SlayEntity(Board board) {
+        super(Type.KILL_ENTITY, board, 1, 1);
     }
 
     @Override

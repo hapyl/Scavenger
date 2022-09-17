@@ -1,5 +1,6 @@
 package me.hapyl.scavenger.task.tasks;
 
+import me.hapyl.scavenger.game.Board;
 import me.hapyl.scavenger.task.Task;
 import me.hapyl.scavenger.task.Type;
 import me.hapyl.scavenger.utils.WrittenTextureValues;
@@ -11,8 +12,8 @@ import org.bukkit.inventory.ItemStack;
 
 public class DieFromCause extends Task<EntityDamageEvent.DamageCause> {
 
-    public DieFromCause(EntityDamageEvent.DamageCause cause) {
-        super(Type.DIE_FROM_CAUSE, cause, 1);
+    public DieFromCause(Board board) {
+        super(Type.DIE_FROM_CAUSE, board, 1, 1);
     }
 
     @Override
@@ -27,4 +28,5 @@ public class DieFromCause extends Task<EntityDamageEvent.DamageCause> {
         builder.addLore("&7Die from &b&l" + Chat.capitalize(getT()));
         builder.addLore("&7Times to die &b&l" + getAmount());
     }
+
 }

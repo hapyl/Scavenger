@@ -9,41 +9,57 @@ import java.util.UUID;
 
 public class BoardSettings {
 
+    private final Board board;
     private final UUID uuid;
     private final Set<Setting> enabled;
-    private Type<?> typeRender;
+    private Type<?> typeFilter;
 
-
-    public BoardSettings(UUID uuid) {
+    public BoardSettings(Board board, UUID uuid) {
+        this.board = board;
         this.uuid = uuid;
         this.enabled = Sets.newHashSet();
-        this.typeRender = null;
+        this.typeFilter = null;
     }
 
-    public Type<?> getTypeRender() {
-        return typeRender;
+    public Type<?> getTypeFilter() {
+        return typeFilter;
     }
 
-    public String getTypeRenderName() {
-        return typeRender == null ? "All" : typeRender.getName();
-    }
+    public void nextTypeFilter() {
+        final List<Type<?>> values = board.getTypes();
 
-    public void nextTypeRender() {
-        final List<Type<?>> values = Type.values;
-
-        if (typeRender == null) {
-            typeRender = values.get(0);
+        if (typeFilter == null) {
+            typeFilter = values.get(0);
             return;
         }
 
         for (int i = 0; i < values.size(); i++) {
             final Type<?> type = values.get(i);
-            if (type != typeRender) {
+            if (type != typeFilter) {
                 continue;
             }
 
-            typeRender = (values.size() > i + 1 ? values.get(i + 1) : null);
+            typeFilter = (values.size() > i + 1 ? values.get(i + 1) : null);
             break;
+        }
+    }
+
+    public void previousTypeFilter() {
+        final List<Type<?>> values = board.getTypes();
+
+        if (typeFilter == null) {
+            typeFilter = values.get(values.size() - 1);
+            return;
+        }
+
+        for (int i = 0; i < values.size(); i++) {
+            final Type<?> type = values.get(i);
+
+            if (type != typeFilter) {
+                continue;
+            }
+
+            typeFilter = (i == 0 ? null : values.get(i - 1));
         }
     }
 
@@ -65,7 +81,8 @@ public class BoardSettings {
     }
 
     public enum Setting {
-        RENDER_COMPLETED_GREEN
+        RENDER_COMPLETED_GREEN,
+        SHOW_PINNED
     }
 
 }

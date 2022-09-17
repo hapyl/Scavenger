@@ -1,9 +1,10 @@
 package me.hapyl.scavenger.game;
 
-import me.hapyl.scavenger.Message;
+import me.hapyl.scavenger.utils.ScavengerItem;
 import me.hapyl.spigotutils.module.chat.Chat;
 import me.hapyl.spigotutils.module.player.EffectType;
 import me.hapyl.spigotutils.module.player.PlayerLib;
+import me.hapyl.spigotutils.module.util.Nulls;
 import me.hapyl.spigotutils.module.util.ThreadRandom;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
@@ -13,7 +14,7 @@ public class BingoWorld {
 
     private final WorldCreator creator;
     private final String hexName;
-    private final World world;
+    private World world;
 
     public BingoWorld() {
         hexName = generateWorldName();
@@ -23,10 +24,15 @@ public class BingoWorld {
         Chat.broadcastOp("&c[ADMIN] &7The server WILL lag during generation!");
         Chat.sendTitles("&a&lGENERATING WORLD", "&7Please wait...", 0, 20000, 0);
 
-        world = creator.createWorld();
-        if (world == null) {
-            Chat.broadcastOp("&c[ADMIN] &eError generating world!");
-            return;
+        try {
+            world = creator.createWorld();
+
+            if (world == null) {
+                Chat.broadcastOp("&c[ADMIN] &eError generating world!");
+                return;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         // World generation finished
@@ -80,7 +86,10 @@ public class BingoWorld {
         player.setBedSpawnLocation(location, true);
         player.teleport(location);
 
-        Message.sendStartTitle(player);
+        Nulls.runIfNotNull(Team.getTeam(player), team -> team.giveKitStart(player));
+
+        // Give board item
+        ScavengerItem.ITEM_BOARD_SHORTCUT.put(player, 8);
     }
 
     public String getHexName() {

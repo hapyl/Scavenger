@@ -110,6 +110,7 @@ public class WrittenTextureValues {
         damageCauseTexture.put(EntityDamageEvent.DamageCause.DRYOUT, Material.ICE);
         damageCauseTexture.put(EntityDamageEvent.DamageCause.FREEZE, Material.SNOWBALL);
         damageCauseTexture.put(EntityDamageEvent.DamageCause.SONIC_BOOM, Material.ECHO_SHARD);
+        damageCauseTexture.put(EntityDamageEvent.DamageCause.CONTACT, Material.CACTUS);
 
     }
 
