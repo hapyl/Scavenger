@@ -7,7 +7,8 @@ import me.hapyl.scavenger.game.Board;
 import me.hapyl.scavenger.game.Manager;
 import me.hapyl.scavenger.game.Team;
 import me.hapyl.scavenger.gui.BoardGUI;
-import me.hapyl.scavenger.task.Type;
+import me.hapyl.scavenger.task.type.Type;
+import me.hapyl.scavenger.task.type.Types;
 import me.hapyl.scavenger.utils.FileUtils;
 import me.hapyl.spigotutils.module.chat.Chat;
 import me.hapyl.spigotutils.module.command.SimplePlayerAdminCommand;
@@ -88,6 +89,33 @@ public class ScavengerCommand extends SimplePlayerAdminCommand {
                     }
                 }
 
+                case "deleteallbingoworlds" -> {
+                    final File container = Bukkit.getWorldContainer();
+                    final File[] files = container.listFiles();
+
+                    if (files == null || files.length == 0) {
+                        Chat.sendMessage(player, "&cDirectory is empty!");
+                        return;
+                    }
+
+                    int deleted = 0;
+                    for (File file : files) {
+                        if (!file.isDirectory()) {
+                            continue;
+                        }
+
+                        final String fileName = file.getName();
+                        if (!fileName.startsWith("bingo_")) {
+                            continue;
+                        }
+
+                        FileUtils.deleteFolder(file);
+                        ++deleted;
+                    }
+
+                    Chat.sendMessage(player, "&aDeleted %s bingo worlds!", deleted);
+                }
+
                 case "testworldcreation" -> new BingoWorld();
 
                 case "stop" -> {
@@ -106,7 +134,9 @@ public class ScavengerCommand extends SimplePlayerAdminCommand {
                         Chat.sendMessage(player, "&cExpecting &4Type<?> &cas &4arg[1]&c, found nothing.");
                         return;
                     }
-                    final Type<?> type = Type.byName.get(args[1].toUpperCase(Locale.ROOT));
+
+                    final Type<?> type = Types.byName(args[1].toUpperCase(Locale.ROOT));
+
                     if (type == null) {
                         Chat.sendMessage(player, "&cInvalid type!");
                         return;
@@ -132,14 +162,14 @@ public class ScavengerCommand extends SimplePlayerAdminCommand {
     @Override
     protected List<String> tabComplete(CommandSender sender, String[] args) {
         if (args.length == 1) {
-            return completerSort(new String[] { "new", "stop", "values", "testworldcreation", "deleteworld" }, args);
+            return completerSort(new String[] { "new", "stop", "values", "testworldcreation", "deleteworld", "deleteallbingoworlds" }, args);
         }
         else {
             if (args.length == 2) {
                 final String arg = args[0].toLowerCase();
                 switch (arg) {
                     case "values" -> {
-                        return completerSort(Type.byName.keySet(), args);
+                        return completerSort(Types.names(), args);
                     }
                     case "deleteworld" -> {
                         final Set<String> names = Sets.newHashSet();

@@ -2,30 +2,49 @@ package me.hapyl.scavenger.task.tasks;
 
 import me.hapyl.scavenger.game.Board;
 import me.hapyl.scavenger.task.Task;
-import me.hapyl.scavenger.task.Type;
+import me.hapyl.scavenger.task.type.Type;
+import me.hapyl.scavenger.translate.Translate;
 import me.hapyl.scavenger.utils.WrittenTextureValues;
 import me.hapyl.spigotutils.module.chat.Chat;
 import me.hapyl.spigotutils.module.inventory.ItemBuilder;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-public class BreedAnimal extends Task<EntityType> {
+import javax.annotation.Nonnull;
 
-    public BreedAnimal(Board board) {
-        super(Type.BREED_ANIMAL, board, 1, 2);
+public class BreedAnimal extends Task<EntityType> implements TranslateTask {
+
+    public BreedAnimal(@Nonnull Type<EntityType> type, @Nonnull Board board) {
+        super(type, board);
     }
 
     @Override
     public ItemStack getMaterial() {
-        return ItemBuilder.playerHeadUrl(WrittenTextureValues.entityTexture.get(getT())).build();
+        return ItemBuilder.playerHeadUrl(WrittenTextureValues.entityTexture.get(getItem())).build();
     }
 
+    @Nonnull
     @Override
-    public void appendLore(ItemBuilder builder) {
-        builder.addSmartLore("Your team must breed animals to advance this task.", "&8");
-        builder.addLore();
-        builder.addLore("&7Animals to breed &b&l" + Chat.capitalize(getT()));
-        builder.addLore("&7Times to breed &b&l" + getAmount());
+    public String formatItem() {
+        return Chat.capitalize(getItem());
     }
 
+    @Nonnull
+    @Override
+    public Translate getDescription() {
+        return Translate.TASK_BREED_ANIMALS_ABOUT;
+    }
+
+    @Nonnull
+    @Override
+    public Translate getTypeDescription() {
+        return Translate.TASK_BREED_ANIMALS_TYPE;
+    }
+
+    @Nonnull
+    @Override
+    public Translate getAmountDescription() {
+        return Translate.TASK_BREED_ANIMALS_AMOUNT;
+    }
 }

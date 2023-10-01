@@ -3,16 +3,14 @@ package me.hapyl.scavenger.task;
 import me.hapyl.scavenger.InjectListener;
 import me.hapyl.scavenger.Main;
 import me.hapyl.scavenger.game.Board;
-import org.bukkit.advancement.Advancement;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.HumanEntity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
+import me.hapyl.scavenger.task.type.Types;
+import org.bukkit.block.Block;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.player.PlayerAdvancementDoneEvent;
 import org.bukkit.inventory.CraftingInventory;
 import org.bukkit.inventory.ItemStack;
 
@@ -32,7 +30,7 @@ public class Handler extends InjectListener {
             return;
         }
 
-        board.findTaskAndAdvance(Type.KILL_ENTITY, entity.getType(), player, 1);
+        board.findTaskAndAdvance(Types.KILL_ENTITY, entity.getType(), player);
     }
 
     @EventHandler()
@@ -45,7 +43,7 @@ public class Handler extends InjectListener {
             return;
         }
 
-        final Task<?> task = board.findTask(Type.CRAFT_ITEM, item.getType());
+        final Task<?> task = board.findTask(Types.CRAFT_ITEM, item.getType());
         if (task == null) {
             return;
         }
@@ -82,7 +80,7 @@ public class Handler extends InjectListener {
             return;
         }
 
-        final Task<?> task = board.findTask(Type.GATHER_ITEM, item.getType());
+        final Task<?> task = board.findTask(Types.GATHER_ITEM, item.getType());
         if (task == null) {
             return;
         }
@@ -116,27 +114,37 @@ public class Handler extends InjectListener {
 
         if (ev instanceof EntityDamageByEntityEvent evEntity) {
             final Entity damager = evEntity.getDamager();
-            final Task<?> task = board.findTask(Type.DIE_FROM_ENTITY, damager.getType());
-            if (task != null) {
-                board.getTaskCompletion(task).addCompletion(player, 1);
+            if (!(damager instanceof LivingEntity living)) {
                 return;
             }
+
+            if (living instanceof Projectile projectile && projectile.getShooter() instanceof LivingEntity livingShooter) {
+                living = livingShooter;
+            }
+
+            board.findTaskAndAdvance(Types.DIE_FROM_ENTITY, living.getType(), player);
+            System.out.println("Called");
         }
 
-        board.findTaskAndAdvance(Type.DIE_FROM_CAUSE, cause, player, 1);
+        board.findTaskAndAdvance(Types.DIE_FROM_CAUSE, cause, player);
+        System.out.println("Called cause/");
     }
 
     @EventHandler()
-    public void handleAdvancement(PlayerAdvancementDoneEvent ev) {
+    public void handleBlockBreak(BlockBreakEvent ev) {
         final Player player = ev.getPlayer();
-        final Advancement advancement = ev.getAdvancement();
+        final Block block = ev.getBlock();
 
         final Board board = getPlugin().getManager().getBoard();
         if (board == null) {
             return;
         }
 
-        board.findTaskAndAdvance(Type.ADVANCEMENT_ADVANCER, advancement, player, 1);
+        if (!board.findTaskAndAdvance(Types.MINE_BLOCK, block.getType(), player)) {
+            return;
+        }
+
+        ev.setDropItems(false);
     }
 
     @EventHandler()
@@ -154,7 +162,7 @@ public class Handler extends InjectListener {
             return;
         }
 
-        board.findTaskAndAdvance(Type.DIE_FROM_ENTITY, damager.getType(), player, 1);
+        board.findTaskAndAdvance(Types.DIE_FROM_ENTITY, damager.getType(), player);
     }
 
     @EventHandler()
@@ -171,7 +179,7 @@ public class Handler extends InjectListener {
             return;
         }
 
-        board.findTaskAndAdvance(Type.BREED_ANIMAL, entity.getType(), player, 1);
+        board.findTaskAndAdvance(Types.BREED_ANIMAL, entity.getType(), player);
     }
 
     private int calculateCanGive(Task<?> task, Player player, ItemStack item) {

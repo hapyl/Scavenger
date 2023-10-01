@@ -2,29 +2,49 @@ package me.hapyl.scavenger.task.tasks;
 
 import me.hapyl.scavenger.game.Board;
 import me.hapyl.scavenger.task.Task;
-import me.hapyl.scavenger.task.Type;
+import me.hapyl.scavenger.task.type.Type;
+import me.hapyl.scavenger.translate.Translate;
 import me.hapyl.scavenger.utils.WrittenTextureValues;
 import me.hapyl.spigotutils.module.chat.Chat;
 import me.hapyl.spigotutils.module.inventory.ItemBuilder;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+
+import javax.annotation.Nonnull;
 
 public class SlayEntity extends Task<EntityType> {
 
-    public SlayEntity(Board board) {
-        super(Type.KILL_ENTITY, board, 1, 1);
+    public SlayEntity(@Nonnull Type<EntityType> type, @Nonnull Board board) {
+        super(type, board);
     }
 
     @Override
     public ItemStack getMaterial() {
-        return ItemBuilder.playerHeadUrl(WrittenTextureValues.entityTexture.getOrDefault(getT(), "")).build();
+        return ItemBuilder.playerHeadUrl(WrittenTextureValues.entityTexture.getOrDefault(getItem(), "")).build();
     }
 
+    @Nonnull
     @Override
-    public void appendLore(ItemBuilder builder) {
-        builder.addSmartLore("Your team must kill a mob to advance this task.", "&8");
-        builder.addLore();
-        builder.addLore("&7Mob to kill &c&l" + Chat.capitalize(getT()));
-        builder.addLore("&7Times to kill &c&l" + getAmount());
+    public String formatItem() {
+        return Chat.capitalize(getItem());
+    }
+
+    @Nonnull
+    @Override
+    public Translate getDescription() {
+        return Translate.TASK_DIE_FROM_ENTITY_ABOUT;
+    }
+
+    @Nonnull
+    @Override
+    public Translate getTypeDescription() {
+        return Translate.TASK_DIE_FROM_ENTITY_TYPE;
+    }
+
+    @Nonnull
+    @Override
+    public Translate getAmountDescription() {
+        return Translate.TASK_DIE_FROM_ENTITY_AMOUNT;
     }
 }

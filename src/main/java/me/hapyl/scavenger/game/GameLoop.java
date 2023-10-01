@@ -13,7 +13,6 @@ public class GameLoop extends Inject implements Runnable {
 
     @Override
     public void run() {
-
         // Every second loop
         if (tick % 20 == 0) {
 

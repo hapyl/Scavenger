@@ -2,6 +2,7 @@ package me.hapyl.scavenger.game;
 
 import com.google.common.collect.Sets;
 import me.hapyl.scavenger.Message;
+import me.hapyl.scavenger.translate.Translate;
 import me.hapyl.spigotutils.module.chat.Chat;
 import me.hapyl.spigotutils.module.inventory.ItemBuilder;
 import org.bukkit.Bukkit;
@@ -142,16 +143,16 @@ public enum Team {
 
         final int bonusItem = new Random().nextInt(3);
 
-        inventory.addItem(createItem(Material.STONE_PICKAXE, "Started Pickaxe"));
-        inventory.addItem(createItem(Material.STONE_SHOVEL, "Started Shovel"));
-        inventory.addItem(createItem(Material.STONE_AXE, "Started Axe"));
-        inventory.addItem(createItem(Material.BREAD, 16, "Bread"));
+        inventory.addItem(createItem(Material.STONE_PICKAXE, Translate.ITEM_STARTER_PICKAXE.get(player)));
+        inventory.addItem(createItem(Material.STONE_SHOVEL, Translate.ITEM_BONUS_SHOVEL.get(player)));
+        inventory.addItem(createItem(Material.STONE_AXE, Translate.ITEM_STARTER_AXE.get(player)));
+        inventory.addItem(createItem(Material.BREAD, 16, Translate.ITEM_STARTER_BREAD.get(player)));
 
         // Change one of the tools to iron (Bonus)
         switch (bonusItem) {
-            case 0 -> inventory.setItem(0, createItem(Material.IRON_PICKAXE, "Bonus Pickaxe"));
-            case 1 -> inventory.setItem(1, createItem(Material.IRON_SHOVEL, "Bonus Shovel"));
-            case 2 -> inventory.setItem(2, createItem(Material.IRON_AXE, "Bonus Axe"));
+            case 0 -> inventory.setItem(0, createItem(Material.IRON_PICKAXE, Translate.ITEM_BONUS_PICKAXE.get(player)));
+            case 1 -> inventory.setItem(1, createItem(Material.IRON_SHOVEL, Translate.ITEM_BONUS_SHOVEL.get(player)));
+            case 2 -> inventory.setItem(2, createItem(Material.IRON_AXE, Translate.ITEM_BONUS_AXE.get(player)));
         }
 
         final ItemBuilder chest = new ItemBuilder(Material.LEATHER_CHESTPLATE);

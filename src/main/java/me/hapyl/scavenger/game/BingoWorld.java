@@ -10,6 +10,9 @@ import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 
+import static me.hapyl.scavenger.translate.Translate.GAME_GENERATING_WORLD_SUBTITLE;
+import static me.hapyl.scavenger.translate.Translate.GAME_GENERATING_WORLD_TITLE;
+
 public class BingoWorld {
 
     private final WorldCreator creator;
@@ -22,7 +25,10 @@ public class BingoWorld {
 
         Chat.broadcastOp("&c[ADMIN] &7Generating bingo world '%s'...", creator.name());
         Chat.broadcastOp("&c[ADMIN] &7The server WILL lag during generation!");
-        Chat.sendTitles("&a&lGENERATING WORLD", "&7Please wait...", 0, 20000, 0);
+
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            Chat.sendTitle(player, GAME_GENERATING_WORLD_TITLE.get(player), GAME_GENERATING_WORLD_SUBTITLE.get(player), 0, 20000, 0);
+        }
 
         try {
             world = creator.createWorld();
@@ -107,9 +113,11 @@ public class BingoWorld {
     private String generateWorldName() {
         final StringBuilder builder = new StringBuilder();
         final String chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+
         for (int i = 0; i < 6; i++) {
             builder.append(chars.toCharArray()[ThreadRandom.nextInt(chars.length())]);
         }
+
         return builder.toString();
     }
 }

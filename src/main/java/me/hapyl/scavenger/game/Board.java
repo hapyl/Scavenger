@@ -4,12 +4,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import me.hapyl.scavenger.Message;
-import me.hapyl.scavenger.task.LinkedType;
-import me.hapyl.scavenger.task.Task;
-import me.hapyl.scavenger.task.TaskCompletion;
-import me.hapyl.scavenger.task.Type;
-import me.hapyl.scavenger.task.tasks.*;
-import me.hapyl.spigotutils.EternaPlugin;
+import me.hapyl.scavenger.task.*;
+import me.hapyl.scavenger.task.type.Type;
 import me.hapyl.spigotutils.module.chat.Chat;
 import me.hapyl.spigotutils.module.chat.LazyClickEvent;
 import me.hapyl.spigotutils.module.chat.LazyHoverEvent;
@@ -23,35 +19,34 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import static me.hapyl.scavenger.translate.Translate.*;
+
 public class Board {
 
     private final long timeLimit;
-    private long startedAt;
-
     private final Manager manager;
-    private final List<Task<?>> tasks;
-    private final List<Type<?>> types;
-    private final Map<Task<?>, TaskCompletion> taskCompleted;
-    private final Map<UUID, Set<Task<?>>> pinned;
+    private final Map<Task<?>, TaskData> board;
+    private final Map<UUID, PlayerData> playerData;
     private final Map<Team, Integer> teamPoints;
+    private final List<Type<?>> types;
     private final BingoWorld world;
-    private final Map<UUID, BoardSettings> settings;
+    private long startedAt;
 
     public Board(Manager manager, long timeLimitInMinutes) {
         this.manager = manager;
         this.timeLimit = timeLimitInMinutes * 60000;
-        this.tasks = Lists.newArrayList();
+        this.board = Maps.newLinkedHashMap();
+        this.playerData = Maps.newHashMap();
         this.types = Lists.newArrayList();
-        this.pinned = Maps.newHashMap();
-        this.taskCompleted = Maps.newHashMap();
         this.teamPoints = Maps.newHashMap();
-        this.settings = Maps.newHashMap();
 
         // Generate Tasks
         generateTasks();
@@ -83,7 +78,9 @@ public class Board {
                     startedAt = System.currentTimeMillis();
                     this.cancel();
 
-                    Chat.sendTitles("&a&lTHE GAME BEGINS!", "", 10, 60, 10);
+                    for (Player player : Bukkit.getOnlinePlayers()) {
+                        Chat.sendTitle(player, GAME_STARTED.get(player), "", 10, 60, 10);
+                    }
 
                     PlayerLib.playSound(Sound.ENTITY_WITHER_SKELETON_DEATH, 0.75f);
                     PlayerLib.playSound(Sound.ENTITY_BLAZE_HURT, 0.25f);
@@ -92,14 +89,25 @@ public class Board {
                     return;
                 }
 
-                Chat.sendTitles("&a&lSTARTING IN", "&b%ss".formatted(BukkitUtils.roundTick(startTime)), 0, 20, 0);
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    Chat.sendTitle(
+                            player,
+                            GAME_START_COUNTDOWN.get(player),
+                            "&b%ss".formatted(BukkitUtils.roundTick(startTime)),
+                            0,
+                            60,
+                            0
+                    );
+                }
             }
         }.runTaskTimer(manager.getPlugin(), 0L, 1L);
     }
 
+    @Nonnull
     public BoardSettings getSettings(Player player) {
-        final UUID uuid = player.getUniqueId();
-        return settings.computeIfAbsent(uuid, t -> new BoardSettings(this, uuid));
+        final PlayerData data = getPlayerData(player);
+
+        return data.getSettings();
     }
 
     public BingoWorld getWorld() {
@@ -118,8 +126,9 @@ public class Board {
         return startedAt != 0L;
     }
 
+    @Nonnull
     public List<Task<?>> getTasks() {
-        return tasks;
+        return Lists.newArrayList(board.keySet());
     }
 
     public List<Team> getTopTeams(int limit) {
@@ -131,19 +140,43 @@ public class Board {
                 .map(Map.Entry::getKey).toList();
     }
 
-    public <T> void findTaskAndAdvance(Type<T> type, T t, Player player, int amount) {
-        final Task<?> task = findTask(type, t);
-        final Team team = Team.getTeam(player);
-        if (task == null || team == null) {
-            return;
-        }
-
-        getTaskCompletion(task).addCompletion(player, amount);
+    public <T> boolean findTaskAndAdvance(@Nonnull Type<T> type, @Nonnull T t, @Nonnull Player player) {
+        return findTaskAndAdvance(type, t, player, 1);
     }
 
-    public <T> Task<?> findTask(Type<T> type, T t) {
-        for (Task<?> task : tasks) {
-            if (task.getType() == type && task.getT() == t) {
+    public <T> boolean findTaskAndAdvance(@Nonnull Type<T> type, @Nonnull T t, @Nonnull Player player, @Nonnull int amount) {
+        final Task<?> task = findTask(type, t);
+        final Team team = Team.getTeam(player);
+
+        if (task == null || team == null) {
+            return false;
+        }
+
+        final TaskCompletion completion = getTaskData(task).getTaskCompletion();
+
+        if (completion.isComplete(player)) {
+            return false;
+        }
+
+        completion.addCompletion(player, amount);
+        return true;
+    }
+
+    @Nonnull
+    public TaskData getTaskData(@Nonnull Task<?> task) {
+        final TaskData taskData = board.get(task);
+
+        if (taskData == null) {
+            throw new NullPointerException("Data for task %s does not exist!".formatted(task.getName()));
+        }
+
+        return taskData;
+    }
+
+    @Nullable
+    public <T> Task<?> findTask(@Nonnull Type<T> type, @Nonnull T t) {
+        for (Task<?> task : board.keySet()) {
+            if (task.compare(type, t)) {
                 return task;
             }
         }
@@ -151,50 +184,53 @@ public class Board {
         return null;
     }
 
+    @Nonnull
     public List<TaskCompletion> getTaskInProgress(Team team) {
         final List<TaskCompletion> list = Lists.newArrayList();
-        taskCompleted.forEach((task, completion) -> {
-            final int amount = completion.getCompletion(team);
+
+        board.forEach((task, data) -> {
+            final TaskCompletion taskCompletion = data.getTaskCompletion();
+            final int amount = taskCompletion.getCompletion(team);
+
             if (amount > 0 && amount < task.getAmount()) {
-                list.add(completion);
+                list.add(taskCompletion);
             }
         });
+
         return list;
     }
 
-    public TaskCompletion getTaskCompletion(Task<?> task) {
-        return taskCompleted.computeIfAbsent(task, TaskCompletion::new);
-    }
-
-    // Jesus this is probably the worst implementation,
-    // but I can't think of anything better than this.
     public void generateTasks() {
         for (int i = 0; i < 25; i++) {
-            final LinkedType type = manager.getWeight().get();
+            final Type<?> type = manager.getWeight().get();
 
-            final Type<?> link = type.getLink();
-            if (!types.contains(link)) {
-                types.add(link);
+            if (type == null) {
+                continue;
             }
 
-            switch (type) {
-                case CRAFT_ITEM -> tasks.add(new CraftItem(this));
-                case GATHER_ITEM -> tasks.add(new GatherItem(this));
-                case BREED_ANIMAL -> tasks.add(new BreedAnimal(this));
-                case DIE_FROM_CAUSE -> tasks.add(new DieFromCause(this));
-                case DIE_FROM_ENTITY -> tasks.add(new DieFromEntity(this));
-                case KILL_ENTITY -> tasks.add(new SlayEntity(this));
+            final Task<?> task = type.createTask(this);
+            board.put(task, new TaskData(task));
+
+            if (!types.contains(type)) {
+                types.add(type);
             }
         }
     }
 
-    public <T> T getRandomAllowedOf(Type<T> type) {
+    /**
+     * Gets a random item that is allowed and is not yet present in the board.
+     *
+     * @param type - Type of the item.
+     */
+    public <T> T getRandomAllowedOf(@Nonnull Type<T> type) {
         final T random = type.randomAllowed();
-        for (Task<?> task : tasks) {
-            if (task.getT().equals(random)) {
+
+        for (Task<?> task : board.keySet()) {
+            if (task.getItem().equals(random)) {
                 return getRandomAllowedOf(type);
             }
         }
+
         return random;
     }
 
@@ -226,7 +262,6 @@ public class Board {
         // Stop glowing
         Team.forEachTeam(team -> {
             team.getPlayers().forEach(player -> {
-                EternaPlugin.getPlugin().getGlowingManager().stopGlowing(player);
             });
         });
 
@@ -249,9 +284,9 @@ public class Board {
 
         for (Player player : Bukkit.getOnlinePlayers()) {
             Chat.sendCenterMessage(player, "&e&l&mxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-            Chat.sendCenterMessage(player, "&6&lSCAVENGER ENDED!");
+            Chat.sendCenterMessage(player, GAME_ENDED.get(player));
             Chat.sendCenterMessage(player, "");
-            Chat.sendCenterMessage(player, "&7Top %s Teams:", topTeams.size());
+            Chat.sendCenterMessage(player, GAME_ENDED_TOP_TEAMS.get(player, topTeams.size()));
             if (topTeams.isEmpty()) {
                 Chat.sendCenterMessage(player, "&8None?");
             }
@@ -263,7 +298,7 @@ public class Board {
                             "%s &e- &6&l%s points%s",
                             team.getNameCaps(),
                             getPoints(team),
-                            isTeam ? " &a(Your Team)" : ""
+                            isTeam ? (" " + GAME_ENDED_YOUR_TEAM.get(player)) : ""
                     );
                 });
             }
@@ -275,7 +310,9 @@ public class Board {
 
     public int getTasksCompleted(UUID uuid) {
         int times = 0;
-        for (TaskCompletion completion : taskCompleted.values()) {
+
+        for (TaskData value : board.values()) {
+            final TaskCompletion completion = value.getTaskCompletion();
             for (Player player : completion.getPlayersCompleted()) {
                 if (player.getUniqueId() == uuid) {
                     times++;
@@ -283,6 +320,7 @@ public class Board {
                 }
             }
         }
+
         return times;
     }
 
@@ -294,22 +332,33 @@ public class Board {
         return new SimpleDateFormat("mm:ss").format(getTimeLeft());
     }
 
-    public int getTaskTypeAmount(Type<?> type) {
-        int i = 0;
-        for (Task<?> task : tasks) {
-            if (task.getType() == type) {
-                i++;
+    public int getTaskTypeCount(@Nonnull Type<?> type) {
+        int count = 0;
+
+        for (Task<?> task : board.keySet()) {
+            if (task.compare(type)) {
+                count++;
             }
         }
-        return i;
+
+        return count;
     }
 
+    @Nonnull
     public List<Type<?>> getTypes() {
         return types;
     }
 
-    public Set<Task<?>> getPinnedTasks(Player player) {
-        return pinned.computeIfAbsent(player.getUniqueId(), t -> Sets.newLinkedHashSet());
+    @Nonnull
+    public List<Task<?>> getPinnedTasks(Player player) {
+        final PlayerData data = getPlayerData(player);
+
+        return data.getPinnedTasks();
+    }
+
+    @Nonnull
+    public PlayerData getPlayerData(Player player) {
+        return playerData.computeIfAbsent(player.getUniqueId(), fn -> new PlayerData(player.getUniqueId(), this));
     }
 
     public boolean isPinned(Player player, Task<?> task) {
@@ -322,5 +371,10 @@ public class Board {
 
     public void removePinned(Player player, Task<?> task) {
         getPinnedTasks(player).remove(task);
+    }
+
+    @Nonnull
+    public TaskCompletion getTaskCompletion(Task<?> task) {
+        return getTaskData(task).getTaskCompletion();
     }
 }

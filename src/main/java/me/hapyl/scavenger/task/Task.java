@@ -3,27 +3,37 @@ package me.hapyl.scavenger.task;
 import me.hapyl.scavenger.Main;
 import me.hapyl.scavenger.game.Board;
 import me.hapyl.scavenger.game.Team;
+import me.hapyl.scavenger.task.tasks.BreedAnimal;
+import me.hapyl.scavenger.task.tasks.TranslateTask;
+import me.hapyl.scavenger.task.type.Type;
 import me.hapyl.spigotutils.module.chat.Chat;
 import me.hapyl.spigotutils.module.inventory.ItemBuilder;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-public class Task<T> {
+import javax.annotation.Nonnull;
+
+public abstract class Task<T> implements TranslateTask {
 
     private final Board board;
     private final T t;
     private final Type<T> type;
     private final int amount;
 
-    public Task(Type<T> type, Board board, int m, int mx) {
+    public Task(@Nonnull Type<T> type, @Nonnull Board board) {
+        this(type, board, type.getCountMin(), type.getCountMax());
+    }
+
+    public Task(@Nonnull Type<T> type, @Nonnull Board board, int countMin, int countMax) {
         this.type = type;
         this.t = board.getRandomAllowedOf(type);
-        this.amount = m == mx ? m : board.getRandomRange(m, mx);
+        this.amount = countMin == countMax ? countMin : board.getRandomRange(countMin, countMax);
         this.board = board;
     }
 
-    public T getT() {
+    @Nonnull
+    public T getItem() {
         return t;
     }
 
@@ -39,14 +49,10 @@ public class Task<T> {
         return new ItemStack(Material.STONE);
     }
 
-    public void appendLore(ItemBuilder builder) {
-        builder.addSmartLore("&c&lSomeone forgot to add lore for this task, oh well, you will never know what to do ¯\\(ツ)_/¯");
-    }
-
     public ItemStack buildItem(Player player) {
         final Board board = Main.getPlugin().getManager().getBoard();
         if (board == null) {
-            return new ItemBuilder(Material.BEDROCK).setName("&4&lError!").addSmartLore("Could not a game, report this!", "&c").build();
+            return new ItemBuilder(Material.BEDROCK).setName("&4&lError!").addSmartLore("Could not a game! Report this!", "&c").build();
         }
 
         final ItemBuilder builder = new ItemBuilder(this.getMaterial()).setAmount(amount);
@@ -56,12 +62,12 @@ public class Task<T> {
         if (playerTeam == null) {
             return new ItemBuilder(Material.BEDROCK)
                     .setName("&4&lError!")
-                    .addSmartLore("Could not find player team, report this!", "&c")
+                    .addSmartLore("Could not find player's team, report this!", "&c")
                     .build();
         }
 
         builder.setName(getName());
-        appendLore(builder);
+        translateLore(builder, player, this);
         builder.addLore();
 
         if (completion.isComplete(playerTeam)) {
@@ -111,5 +117,32 @@ public class Task<T> {
 
     public String getName() {
         return Chat.capitalize(t.toString()) + " &l" + type.getName();
+    }
+
+    public <C> boolean compare(Type<C> type) {
+        if (type == null) {
+            return false;
+        }
+
+        return this.type.equals(type);
+    }
+
+    public <C> boolean compare(C c) {
+        if (c == null) {
+            return false;
+        }
+
+        return this.t.equals(c);
+    }
+
+    public <C> boolean compare(Type<C> type, C t) {
+        return compare(type) && compare(t);
+    }
+
+    protected void translateLore(ItemBuilder builder, Player player, TranslateTask translateTask) {
+        builder.addSmartLore(translateTask.getDescription().get(player), "&8&o");
+        builder.addLore();
+        builder.addLore(translateTask.getTypeDescription().get(player, translateTask.formatItem()));
+        builder.addLore(translateTask.getAmountDescription().get(player, getAmount()));
     }
 }

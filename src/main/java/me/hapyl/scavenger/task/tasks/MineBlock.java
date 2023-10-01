@@ -12,15 +12,15 @@ import org.bukkit.inventory.ItemStack;
 
 import javax.annotation.Nonnull;
 
-public class CraftItem extends Task<Material> {
+public class MineBlock extends Task<Material> {
 
-    public CraftItem(@Nonnull Type<Material> type, @Nonnull Board board) {
+    public MineBlock(@Nonnull Type<Material> type, @Nonnull Board board) {
         super(type, board);
     }
 
     @Override
     public ItemStack getMaterial() {
-        return new ItemBuilder(getItem()).setAmount(getAmount()).build();
+        return new ItemBuilder(getItem()).build();
     }
 
     @Nonnull
@@ -32,18 +32,18 @@ public class CraftItem extends Task<Material> {
     @Nonnull
     @Override
     public Translate getDescription() {
-        return Translate.TASK_CRAFT_ITEM_ABOUT;
+        return Translate.TASK_MINE_BLOCK_ABOUT;
     }
 
     @Nonnull
     @Override
     public Translate getTypeDescription() {
-        return Translate.TASK_CRAFT_ITEM_TYPE;
+        return Translate.TASK_MINE_BLOCK_TYPE;
     }
 
     @Nonnull
     @Override
     public Translate getAmountDescription() {
-        return Translate.TASK_CRAFT_ITEM_AMOUNT;
+        return Translate.TASK_MINE_BLOCK_AMOUNT;
     }
 }

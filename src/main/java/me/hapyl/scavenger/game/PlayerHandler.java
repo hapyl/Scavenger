@@ -2,6 +2,7 @@ package me.hapyl.scavenger.game;
 
 import me.hapyl.scavenger.InjectListener;
 import me.hapyl.scavenger.Main;
+import me.hapyl.scavenger.translate.Translate;
 import me.hapyl.scavenger.utils.ScavengerItem;
 import me.hapyl.spigotutils.module.chat.Chat;
 import org.bukkit.entity.Player;
@@ -90,7 +91,10 @@ public class PlayerHandler extends InjectListener {
     @EventHandler()
     public void handlePlayerJoin(PlayerJoinEvent ev) {
         final Player player = ev.getPlayer();
-        Main.getPlugin().getUIManager().createScoreboard(player);
+        final Main plugin = Main.getPlugin();
+
+        plugin.getUIManager().createScoreboard(player);
+        plugin.getTranslate().loadPlayerLangFromNbt(player);
         ev.setJoinMessage(Chat.format("&7[&a+&7] %s%s &bjoined.", player.isOp() ? "&c" : "&b", player.getName()));
     }
 
@@ -110,8 +114,16 @@ public class PlayerHandler extends InjectListener {
 
         // Team message test
         if (message.startsWith("#") && team != null) {
-            final String formatted = "&3&l(Team) %s%s&f:&o %s".formatted(team.getColor(), player.getName(), message.substring(1));
-            team.getPlayers().forEach(tm -> Chat.sendMessage(tm, formatted));
+            team.getPlayers().forEach(tm -> {
+                Chat.sendMessage(
+                        tm,
+                        "%s %s%s&f:&o %s".formatted(Translate.CHAT_TEAM_PREFIX.get(tm),
+                                team.getColor(),
+                                player.getName(),
+                                message.substring(1).trim()
+                        )
+                );
+            });
             return;
         }
 

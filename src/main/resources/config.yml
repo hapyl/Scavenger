@@ -1,0 +1,148 @@
+type:
+  # Task for crafting items.
+  # Allowed values handled in code.
+  craft_item:
+    # Minimum amount to craft.
+    min: 1
+    # Maximum amount to craft.
+    max: 4
+  # Task for gathering (picking-up) items.
+  # Allowed values handled in code.
+  gather_item:
+    # Minimum amount to gather.
+    min: 1
+    # Maximum amount to gather.
+    max: 8
+  # Task for killing entities.
+  kill_entity:
+    # Minimum amount to kill.
+    min: 1
+    # Maximum amount to kill.
+    max: 3
+    # Entities that are allowed to be chosen for the scavenger.
+    # Must be a constant name from https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/entity/EntityType.html
+    # Must be a "living" entity.
+    allowed:
+      - STRAY
+      - HUSK
+      - ZOMBIE_VILLAGER
+      - DONKEY
+      - MULE
+      - CREEPER
+      - SKELETON
+      - SPIDER
+      - ZOMBIE
+      - SLIME
+      - GHAST
+      - ZOMBIFIED_PIGLIN
+      - ENDERMAN
+      - CAVE_SPIDER
+      - SILVERFISH
+      - BLAZE
+      - MAGMA_CUBE
+      - BAT
+      - WITCH
+      - ENDERMITE
+      - GUARDIAN
+      - PIG
+      - SHEEP
+      - COW
+      - CHICKEN
+      - SQUID
+      - WOLF
+      - SNOWMAN
+      - OCELOT
+      - IRON_GOLEM
+      - HORSE
+      - RABBIT
+      - LLAMA
+      - PARROT
+      - VILLAGER
+      - TURTLE
+      - PHANTOM
+      - COD
+      - SALMON
+      - PUFFERFISH
+      - TROPICAL_FISH
+      - DROWNED
+      - DOLPHIN
+      - CAT
+      - PANDA
+      - FOX
+      - BEE
+      - HOGLIN
+      - PIGLIN
+      - STRIDER
+      - ZOGLIN
+      - PIGLIN_BRUTE
+      - AXOLOTL
+      - GOAT
+      - FROG
+      - WARDEN
+      - CAMEL
+  # Task for breeding animals.
+  breed_animal:
+    # Entities that are allowed to be chosen for the scavenger.
+    # Must be a constant name from https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/entity/EntityType.html
+    # Must be a breedable entity.
+    allowed:
+      - WOLF
+      - COW
+      - FROG
+      - DONKEY
+      - PANDA
+      - CAMEL
+      - SHEEP
+      - TURTLE
+      - FOX
+      - MULE
+      - RABBIT
+      - PIG
+      - LLAMA
+      - GOAT
+      - HORSE
+      - CHICKEN
+      - CAT
+      - BEE
+  # Task for dying from a certain cause.
+  die_from_cause:
+    # Minimum number of times to die.
+    min: 1
+    # Maximum number of times to die.
+    max: 2
+    # Must be a constant name from https://hub.spigotmc.org/javadocs/spigot/org/bukkit/event/entity/EntityDamageEvent.DamageCause.html
+    allowed:
+      - ENTITY_ATTACK
+      - PROJECTILE
+      - SUFFOCATION
+      - FALL
+      - FIRE
+      - FIRE_TICK
+      - MELTING
+      - LAVA
+      - DROWNING
+      - BLOCK_EXPLOSION
+      - ENTITY_EXPLOSION
+      - LIGHTNING
+      - STARVATION
+      - POISON
+      - MAGIC
+      - FALLING_BLOCK
+      - HOT_FLOOR
+      - CRAMMING
+      - DRYOUT
+      - FREEZE
+  # Task for dying from a certain entity.
+  # Handled in code.
+  die_from_entity:
+    # Minimum number of deaths.
+    min: 1
+    # Maximum number of deaths.
+    max: 2
+  # Task for mining a block.
+  # Handled in code.
+  mine_block:
+    # Minimum number of blocks to mine.
+    min: 10
+    # Maximum number of blocks to mine.
+    max: 64

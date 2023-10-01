@@ -13,7 +13,8 @@ import org.bukkit.entity.Player;
 public class StuckCommand extends SimplePlayerCommand {
     public StuckCommand(String name) {
         super(name);
-        setDescription("Use if stuck or in wrong world.");
+
+        setDescription("Use if stuck or in the wrong world.");
     }
 
     @Override

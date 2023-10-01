@@ -43,9 +43,11 @@ public class TaskCompletion {
 
     public int getCompletion(Player player) {
         final Team team = Team.getTeam(player);
+
         if (team == null) {
             return 0;
         }
+
         return getCompletion(team);
     }
 

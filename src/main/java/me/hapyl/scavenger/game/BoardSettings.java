@@ -1,26 +1,26 @@
 package me.hapyl.scavenger.game;
 
 import com.google.common.collect.Sets;
-import me.hapyl.scavenger.task.Type;
+import me.hapyl.scavenger.task.type.Type;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 public class BoardSettings {
 
     private final Board board;
-    private final UUID uuid;
     private final Set<Setting> enabled;
     private Type<?> typeFilter;
 
-    public BoardSettings(Board board, UUID uuid) {
+    public BoardSettings(@Nonnull Board board) {
         this.board = board;
-        this.uuid = uuid;
         this.enabled = Sets.newHashSet();
         this.typeFilter = null;
     }
 
+    @Nullable
     public Type<?> getTypeFilter() {
         return typeFilter;
     }
@@ -81,8 +81,18 @@ public class BoardSettings {
     }
 
     public enum Setting {
-        RENDER_COMPLETED_GREEN,
-        SHOW_PINNED
+        RENDER_COMPLETED_GREEN {
+            @Override
+            public String toString() {
+                return "Render Completed Tasks Green";
+            }
+        },
+        SHOW_PINNED {
+            @Override
+            public String toString() {
+                return "Show Pinned";
+            }
+        }
     }
 
 }
